@@ -1,0 +1,745 @@
+﻿@using System.Threading
+@using System.Globalization
+@model IEnumerable<Forms>
+
+@section Css {
+    <link rel="stylesheet" href="~/dist/formeo.min.css" type="text/css" />
+    @*<link rel="stylesheet" href="~/assets/css/CustomPrint.min.css" type="text/css" />*@
+    <style>
+        #dvForm, #frmReset {
+            display: none;
+        }
+
+        label.error {
+            color: red
+        }
+
+        #frmReset button {
+            /*font-size: medium;*/
+        }
+
+        .lbl {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+
+        .no-edit {
+            pointer-events: none;
+        }
+    </style>
+}
+
+    @{
+    ViewData["Title"] = ViewBag.title;
+    Layout = "~/Views/Shared/_LayoutOperator.cshtml";
+    string badgeClass = "";
+
+    List<FormsOperators> entry = ViewBag.entry;
+    List<FormsReview> reviews = ViewBag.review;
+    <div class="form-inline form-group">
+        <i class="fa fa-filter fa-2x text-gray visible-md"></i> &nbsp; &nbsp;
+        @Html.DropDownList("operator_type", (SelectList)ViewBag.OperType, "All Operators", new { @class = "form-control ftypes" })
+        &nbsp;
+        <select class="form-control ftypes" id="form_type">
+            <option value="All">All Types of Forms</option>
+            <option value="MONTHLY">MONTHLY</option>
+            <option value="QUARTERLY">QUARTERLY</option>
+            <option value="YEARLY">YEARLY</option>
+        </select>
+    </div>
+    <div class="clearfix"></div>
+}
+
+@if (ViewBag.error != null || TempData["error"] != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+    <div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+}
+@if (ViewBag.message != null || TempData["message"] != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+    <div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+}
+
+<div id="dvForm" class="border p-3 bg-white mb-2" style="position:relative;">
+
+    <button id="btnClose" class="text-danger close right" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
+    <button id="btnReset" class="text-info close right mr-3" title="Reset Form" type="button"><i class="fa fa-refresh"></i></button>
+    <button id="btnPrint" type="button" data-toggle="modal" data-target="dvPrint" class="text-secondary close right mr-3" title="Print this form"><i class="fa fa-print"></i></button>
+
+    <div class="text-primary small">
+        <small class="lbl">Operator:</small> <strong class="text-uppercase">@ViewBag.operatorName</strong> <br />
+        <small class="lbl">ID:</small> <strong class="text-uppercase">@ViewBag.operatorID</strong>
+
+    </div>
+    <p class="small text-center text-danger pt-3">
+        <strong>NOTE:</strong> Please ensure all information is ready before you start filling the survey forms.
+        Submission can only be done once after which you can only view submitted data.
+    </p>
+    <form id="dvResponse" method="post">
+         <h3 class="text-center m-5 text-info">Select from any of the listed forms &raquo;&raquo;</h3>
+        @if(ViewBag.submission != null)
+        {
+            @ViewBag.submission;
+        }
+    </form>
+    <div class="text-center checkBtn">
+        <span class="text-danger w-100 text-small">Please click the validation button below to validate your entry before saving or submtting you entry.</span>
+        <button id="btnValidate" class="btn btn-warning btn-sm text-center text-white center validate" data-status="VALIDATE" type="button"><i class="fa fa-check"></i> Validate your submission</button>
+    </div>
+    <div id="dvBtn" class="text-right form-group">
+
+        <input type="hidden" name="FormDetails" id="FormDetails" value="" />
+        <input type="hidden" name="_formSet" id="_formSet" value="" />
+        <button id="btnSave" class="btn btn-primary btn-sm pull-left process" data-status="SAVED" type="button"><i class="fa fa-save"></i> Save and continue later</button>
+
+        <button id="btnSubmit" type="button" class="btn btn-success btn-sm btnSub" data-status="SUBMITTED"><i class="fa fa-save"></i> Submit and send to NCC</button>
+    </div>
+    <span class="clearfix">&nbsp;</span>
+</div>
+
+<div class="table-responsive bg-white">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="border-top-0">
+                    <span class="text-dark text-uppercase"><i class="fa fa-file"></i> Questionnaires</span>
+                </th>
+                <th class="border-top-0 text-right">
+                    <i class="fa fa-mouse-pointer"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                string badgeText = "";
+                @foreach (var item in Model)
+                {
+                    FormsOperators fr = entry.Find(x => x.FormId == item.RecId);
+                    string dts = fr != null ? item.FormDate(fr.DateSubmitted) : "";
+                    string eid = fr != null ? fr.EntryId.ToString() : "";
+                    string sts = fr != null ? fr.Status.ToLower() : "";
+                    string frm = (@item.FormType != null ? "_" + @item.FormType.ToLower() : "").Replace(" ", "_");
+                    string opr = (@item.FormsTypeCategory != null ? "_" + @item.FormsTypeCategory.ToLower() : "").Replace(" ", "_");
+
+                    string _revStats = string.Empty;
+                    if (fr != null)
+                    {
+                        FormsReview frmRev = reviews.Find(e => e.EntryId == fr.EntryId);
+                        _revStats = frmRev.Status;
+                    }
+
+                    var curdate = DateTime.Now;
+                    var diff = true;
+
+                    if (item.TerminalDate.Year < curdate.Year)
+                    {
+                        diff = false;
+                    }
+
+                    if (item.TerminalDate.Month < curdate.Month && item.TerminalDate.Day < curdate.Day)
+                    {
+                        diff = false;
+                    }
+@*                    else if(item.TerminalDate.Day < curdate.Day)
+                    {
+                        diff = false;
+                    }*@
+
+                    if (
+            @*(item.TerminalDate.Month >= curdate.Month && item.TerminalDate.Day >= curdate.Day && item.TerminalDate.Year >= curdate.Year)*@ diff || (_revStats.ToLower() != "pending" && !string.IsNullOrEmpty(_revStats)))
+                    {
+                        string sClass = "btn-outline-primary";
+                        if (sts.ToLower() == "saved")
+                        {
+                            sClass = "btn-outline-info";
+                            badgeClass = "info";
+                            _revStats = "Unsubmitted";
+                        }
+                        if (_revStats.ToLower() == "rejected")
+                        {
+                            sClass = "btn-outline-danger";
+                            badgeClass = "danger";
+                        }
+                        if (sts.ToLower() == "submitted" && _revStats.ToLower() != "re-filled" && _revStats.ToLower() != "rejected")
+                        {
+                            sClass = "btn-outline-secondary";
+                            if (_revStats.ToLower().ToLower() == "pending")
+                            {
+                                badgeClass = "secondary";
+                            }
+                            else
+                            {
+                                badgeClass = "success";
+                            }
+
+                            @*sts = _revStats;*@
+                        }
+
+                        badgeText = _revStats;
+
+                        if (string.IsNullOrEmpty(sts) && string.IsNullOrEmpty(_revStats))
+                        {
+                            badgeText = "Not Yet Started!";
+                            badgeClass = "primary";
+                        }
+
+                        @*if (sts.ToLower() == "saved") sClass = "btn-outline-danger";
+            if (sts.ToLower() == "submitted" || _revStats == "PENDING") sClass = "btn-outline-secondary";
+            if (_revStats != null && _revStats != "" && _revStats.ToLower() != "pending" && _revStats.ToLower() != "approved") { sClass = "btn-outline-warning"; sts = _revStats; };*@
+
+                        <tr class="@frm @opr itm">
+                            <td class="">
+                                <span class="badge badge-@badgeClass">@badgeText.ToUpper()</span>
+
+                                <h5 style="margin-bottom:0;font-weight:normal;">
+                                    @item.FormName &nbsp; <span class="text-gray">[ @item.FormYear ]</span>
+                                </h5>
+                                <small class="text-black-50">
+                                    &raquo; <span title="Date of termination" class="text-info">Terminates: @item.TerminalDate</span>&nbsp; &bull; &nbsp;
+                                    <span title="Last updated" class="text-info">Last updated: @dts</span>
+                                </small>
+                            </td>
+                            <td class="text-right">
+                                <a href="#" id="@item.RecId" class="btn btn-sm mt-3 @sClass" data-toggle="modal"
+                       data-status="@_revStats" data-html="@item.FormFields" data-entry="@eid" data-ReviewStats="@sts" title="View/Edit this form">
+                                    <i class="fa fa-edit"></i>
+                                    @{
+                                        string _status = "";
+                                        if (sts.Trim().ToLower() == "") _status = "Fill"; if (_revStats != null && _revStats != "" && _revStats.ToLower() != "pending" && _revStats.ToLower() != "approved" && sts.Trim().ToLower() != "saved") _status = "Re-fill"; if (sts.Trim().ToLower() == "saved") _status = "Continue Filling"; if (string.IsNullOrEmpty(_status)) _status = "View";
+                                    }
+                                    @_status Survey
+                                </a>
+                            </td>
+                        </tr>
+                    }
+
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts{
+
+    <script src="~/dist/formeo.min.js" type="text/javascript"></script>
+    <script src="~/assets/js/InputFormatter.js"></script>
+    <script src="~/assets/js/CustomPrint.js" type="text/javascript"></script>
+    <script>
+        $().ready(function() {
+            var mForm = $('#dvResponse');
+            var revStatus = "";
+            var dvBtn = $('#dvBtn');
+            var checkFormBtn = $('.checkBtn');
+
+            mForm.validate({
+                focusInvalid: false,
+                invalidHandler: function (form, validator) {
+
+                    if (!validator.numberOfInvalids())
+                        return;
+
+                    $('html, body').animate({
+                        scrollTop: $(validator.errorList[0].element).offset().top
+                    }, 200);
+                }
+            });
+
+
+            //var cleave = new Cleave('input[type="number"]', {
+            //    numeral: true,
+            //    numeralThousandsGroupStyle: 'thousand'
+            //});
+
+
+
+            //$('#btnPrint').click(function() {
+            //    try {
+            //        $.ajax({
+            //            url: "/dist/formeo.min.css",
+            //            async: false,
+            //            success: function(data) {
+            //                var printscreen = window.open('', '', 'left=1,top=1,width=900,height=600,toolbar=0,scrollbars=0,status=0');
+            //                printscreen.document.write("<html><head>");
+            //                printscreen.document.write("<style> " + data + "</style>");
+            //                printscreen.document.write("</head><body>");
+            //                printscreen.document.write(mForm.html());
+            //                printscreen.document.close(); printscreen.focus(); printscreen.print(); printscreen.close();
+            //            },
+            //            error: function(data) {
+            //                alert('ERROR: Printing failed, please contact the system administrator');
+            //            }
+            //        });
+
+            //    } catch (e) {
+            //        alert(e);
+            //    }
+
+            //});
+
+            $('#btnPrint').click(function() {
+                try {
+                    mForm.printThis({
+                        importCSS: true,
+                    })
+                }
+                catch (e) {
+                    alert(e);
+                }
+            })
+
+            $('#btnReset').click(function() {
+                showPreloaderInner();
+
+                var btn = $(this);
+                var ent = btn.attr('data-entry');
+                var i = btn.find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                $.ajax({
+                    url: "/Survey/Reset",
+                    type: "POST",
+                    data: { "entry": ent },
+                    dataType: 'json',
+                    success: function(response) {
+                        alert(response);
+                        scrollTop(i); i.attr('class', 'fa fa-refresh');
+                        document.location.reload(true);
+                    },
+                    error: function(err) {
+                        alert(err);
+                        //$('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>');
+                        scrollTop(i); i.attr('class', 'fa fa-refresh');
+                    }
+                });
+            });
+
+            function findLabel(lbl) {
+                var label = $(lbl);
+                var text = label.text().replace(/\s+/g, '');
+                dataVal = dataVal.replace(/\s+/g, '');
+
+                if (text.indexOf(dataVal) >= 0) {
+                    return label;
+                }
+
+            }
+
+            var dataVal = "";
+            $('.itm a').click(function() {
+                showPreloaderInner();
+                var i = $(this).find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                revStatus = $(this).attr("data-status");
+                console.log(revStatus.toString());
+                try {
+                    var cnt = $(this).attr('data-html'), entr = $(this).attr('data-entry'), id = $(this).attr("id");
+                    if (entr == 0) {
+                        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+
+                        if (revStatus == null || revStatus == undefined || revStatus == "") {
+
+                            //doit Finish this implementation
+                            $.ajax({
+                                url: "/Survey/GetCompanyInfo",
+                                type: "POST",
+                                dataType: 'json',
+                                data: { "formid": id },
+                                complete: function(response) {
+                                    if (!response.responseJSON.isLoaded) {
+                                        var fields = response.responseJSON.data;
+                                        rendr.render(JSON.parse(cnt));
+
+
+                                        for (var itm of fields) {
+                                            var array = itm.split(":");
+
+                                            $("#" + array[0]).val(array[2]);
+                                        }
+                                    }
+                                    else {
+                                        var _fields = response.responseJSON.data;
+                                        rendr.render(JSON.parse(cnt));
+                                        var lbls = $(".info").siblings();
+
+                                        //var fields = _fields.split(",");
+                                        var fieldData = Object.values(_fields);
+                                        var key = "";
+                                        for (var obj of fieldData) {
+                                            var data = dataVal = obj.name;
+
+                                            var arrLbl = lbls.toArray();
+
+                                            var label = arrLbl.find(findLabel);
+
+                                            var inpLabel = $(label);
+                                            var input = inpLabel.siblings("input, textarea");
+
+                                            var val = obj.value.substring(obj.value.indexOf(":") + 1);
+                                            input.val(val);
+                                        }
+
+                                    }
+                                    scrollTop(i);
+
+                                    $('#dvForm').slideDown('slow');
+                                    $('#btnSave').show();
+                                    $('#btnSubmit').show();
+                                    mForm.removeClass('no-edit');
+                                    dvBtn.removeClass('d-none');
+
+                                    checkFormBtn.removeClass('d-none');
+                                    //$('.formeo-stage input[type="number"]').TouchSpin({
+                                    //    min: 0,
+                                    //    max: 1000000000,
+                                    //    step: 50,
+                                    //    maxboostedstep: 10000000,
+                                    //    buttondown_class: 'btn btn-secondary',
+                                    //    buttonup_class: 'btn btn-secondary'
+                                    //});
+                                    
+                                    $('.formeo-stage input[type="number"]').numeric();
+
+                                    console.log($('.formeo-stage input[type="number"]'));
+                                }
+                            });
+                        }
+                    } else {
+                        var fId = $(this);
+                        $('#btnReset').attr('data-entry', entr);
+                        $.ajax({
+                            url: "/Survey/SDetails",
+                            type: "POST",
+                            data: { "entry": entr },
+                            dataType: 'json',
+                            complete: function(response) {
+                                
+                                if (response.status == 200) {
+                                    if (response.responseJSON != '') {
+                                        $('#dvResponse').html(response.responseJSON.template);
+                                        if (response.responseJSON.data != '' && fId.attr('data-status').toLowerCase() == 'pending') {
+                                            $('#btnReset').hide(); $('#btnSave').hide(); $('#btnSubmit').hide(); $('#dvResponse').addClass('no-edit');
+                                            //checkFormBtn.addClass('d-none');
+
+                                        } else if (response.responseJSON.data != '' && fId.attr('data-status').toLowerCase() == 'submitted' && revStatus == 'rejected') {
+                                            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                                            $('#btnSubmit').show();
+                                            
+                                            checkFormBtn.removeClass('d-none');
+
+                                            //$('.btnSub').attr('data-status', fId.attr('data-status'));
+                                        }
+                                        else if (response.responseJSON.data != '' && fId.attr('data-status').toLowerCase() == 'saved') {
+                                            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                                            $('#btnSubmit').show();
+                                            checkFormBtn.removeClass('d-none');
+
+                                            //$('.btnSub').attr('data-status', fId.attr('data-status'));
+                                        }
+                                        else if (response.responseJSON.data != '' && fId.attr('data-status').toLowerCase() == 'submitted' && revStatus.toLocaleLowerCase() == "pending") {
+                                            $('#btnReset').hide(); $('#btnSave').hide(); $('#btnSubmit').hide(); $('#dvResponse').addClass('no-edit'); $('.remove-input-group').hide(); $(':button.add-input-group').hide();
+                                            //$('.btnSub').attr('data-status', fId.attr('data-status'));
+                                            checkFormBtn.addClass('d-none');
+
+                                        }
+                                    } else {
+                                        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                                        rendr.render(JSON.parse(cnt));
+                                        $('#btnReset').hide(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit'); $('#btnSubmit').show();
+                                        checkFormBtn.removeClass('d-none');
+
+                                        //$('.btnSub').attr('data-status', 'SUBMITTED');
+                                    }
+                                    //$('#_formSet').val('<input type="hidden" name="EntryId" value="' + entr + '" />');
+                                    if (response.responseJSON.data != '') {
+                                        try {
+                                            $.each(response.responseJSON.data, function(i, v) {
+                                                $('#dvResponse').find('#' + v.fieldName).val(v.response);
+                                            });
+                                        } catch (ex) { }
+
+                                    } else {
+
+                                    }
+                                    $('#dvForm').slideDown('slow');
+
+                                    //bindNav();
+                                    scrollTop(i);
+                                    $(".add-input-group").addClass("addd-input-group");
+
+                                    //dvBtn.addClass('d-none');
+                                    
+         
+                                }
+                                
+                            }
+                            //success: function (response) {
+                            //
+                            //    if (response.template != '') {
+                            //        mForm.html(response.template);
+                            //        console.log($('.btnSub'))
+                            //        if (response.data != '' && fId.attr('data-status').toLowerCase() == 'pending') {
+                            //            $('#btnReset').show(); $('#btnSave').show(); $('#btnSubmit').show(); $('#dvResponse').removeClass('no-edit');
+                            //        } else if (response.data != '' && fId.attr('data-status').toLowerCase() == 'rejected') {
+                            //            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                            //            $('#btnSubmit').show();
+                            //            $('.btnSub').attr('data-status', fId.attr('data-status'));
+
+                            //        }
+                            //        else if (response.data != '' && fId.attr('data-status').toLowerCase() == 'saved') {
+                            //            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                            //            $('#btnSubmit').show();
+                            //            $('.btnSub').attr('data-status', fId.attr('data-status'));
+
+                            //        }
+                            //        else if (response.data != '' && fId.attr('data-status').toLowerCase() == 'submitted') {
+                            //            $('#btnReset').hide(); $('#btnSave').hide(); $('#btnSubmit').hide(); $('#dvResponse').addClass('no-edit'); $('.remove-input-group').hide(); $(':button.add-input-group').hide();
+                            //            $('.btnSub').attr('data-status', fId.attr('data-status'));
+                            //        }
+                            //    } else {
+                            //        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                            //        rendr.render(JSON.parse(cnt));
+                            //        $('#btnReset').hide(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit'); $('#btnSubmit').show();
+                            //        $('.btnSub').attr('data-status', 'SUBMITTED');
+                            //    }
+                            //    $('#_formSet').val('<input type="hidden" name="EntryId" value="' + entr + '" /><input type="hidden" name="FormId" value="' + fId.attr('id') + '" />');
+                            //    if (response.data != '') {
+                            //        try {
+                            //            $.each(response.data, function (i, v) {
+                            //                $('#dvResponse').find('#' + v.fieldName).val(v.response);
+                            //            });
+                            //        } catch (ex) { }
+
+                            //    } else {
+
+                            //    }
+                            //    $('#dvForm').slideDown('slow');
+                            //    //bindNav();
+                            //    scrollTop(i);
+                            //    $(".add-input-group").addClass("addd-input-group");
+                            //},
+                            //error: function (err) {
+                            //
+                            //    $('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>');
+                            //    scrollTop(i);
+                            //}
+                        });
+                    }
+                   
+                    $('#_formSet').val('<input type="hidden" name="EntryId" value="' + entr + '" /><input type="hidden" name="FormId" value="' + id + '" />');
+                } catch (e) {
+                    alert(e);
+                    scrollTop(i);
+                }
+            });
+            //                        //error: function (err) {
+            //                        //
+            //                        //    $('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>');
+            //                        //    scrollTop(i);
+            //                        //}
+            //                    });
+            //                }
+            //            }
+            //                } catch (e) {
+            //    alert(e);
+            //    //scrollTop(i);
+            //}
+            //            });
+
+
+            function scrollTop(i) {
+                try {
+                    $("html, body").animate({ scrollTop: 0 }, 2500);
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+                hidePreloaderInner();
+                i.attr('class', 'fa fa-edit');
+
+            }
+
+            $('.validate').click(function() {
+                try {
+                    console.log("entered");
+
+                    mForm.valid()
+                    if (mForm.valid()) {
+                        alert("Validation successful.")
+                    }
+                    //console.log(mForm);
+
+                    //if(mForm.valid()){
+                    //    dvBtn.removeClass('d-none');
+                    //}
+                    //else{
+                    //    dvBtn.addClass('d-none');
+                    //}
+
+
+                }
+                catch (e) {
+                    alert(e);
+                }
+            });
+            
+
+            
+            $('#btnSubmit, #btnSave').click(function() {
+                try {
+
+                    //var form = $('#dvRepForm');
+
+                    //form.validate();
+                    //form.submit();
+                    //console.log(form.isValid());
+                    //if (!form.checkValidity()) {
+                    //
+                    //    var test = form.checkValidity();
+                    //    // Create the temporary button, click and remove it
+                    //    var tmpSubmit = document.createElement('button')
+                    //    form.appendChild(tmpSubmit)
+                    //    tmpSubmit.click()
+                    //    form.removeChild(tmpSubmit)
+                    //}
+                    //else {
+                    var confirmed = "";
+                    var status = $(this).data('status');
+                    if (status == "SAVED") {
+                        confirmed = "Are you sure you are ready to save this form and come back to it later ? ";
+                    } else {
+                        confirmed = "Are you sure you are ready to submit form? Action is irreversable.";
+                    }
+
+
+
+                    if (confirm(confirmed)) {
+                        mForm.validate();
+                        if (mForm.valid()) {
+                            showPreloaderInner();
+
+                            $(this).html('<i class="fa fa-gear fa-spin"></i>');
+                        }
+                        else{
+                            return;
+                        }
+
+
+                        var labels = $(".info").siblings().not(".error");
+                        var dataLabels = "";
+                        var i = 0;
+                        for (var label of labels) {
+                            var lbl = $(label).text();
+                            if (i <= 0)
+                                dataLabels = lbl;
+                            else
+                                dataLabels = dataLabels + ":" + lbl
+
+                            i++;
+
+                        }
+                        $('#FormDetails').val($('#dvResponse').html());
+                        mForm.append($('#FormDetails'));
+                        mForm.append($('#_formSet').val());
+                        mForm.append(`<input type="hidden" name="dataLabels" value="${dataLabels}" id="dataLabels" />`);
+                        mForm.append(`<input type="hidden" name="Status" value="${status}" id="Status" />`);
+                        mForm.append(`<input type="hidden" name="ReviewStats" value="${revStatus}" id="ReviewStats" />`);
+                        mForm.submit();
+                    }
+                    //}
+
+                } catch (e) {
+                    alert(e);
+                }
+                //hidePreloaderInner();
+
+                //hidePreloader();
+
+            });
+
+            $(document).on('click', '.addd-input-group', function() {
+                var newel = $(this).closest('.formeo-row-wrap').find('.formeo-row:first').clone();
+                $(newel).insertBefore(this).find('input').val('');
+
+                function uuidv4() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                }
+
+                $(this).closest('.formeo-row-wrap').find('.formeo-row:last').each(function(a, b) {
+                    $(b).attr('id', uuidv4());
+                    $(b).append(`<button type="button" class="remove-input-group" id="">remove</button>`);
+                    $(b).find('.remove-input-group').attr('id', uuidv4());
+                    $(b).find('.formeo-column').each(function(c, d) {
+                        $(d).attr('id', uuidv4());
+                        var inp = uuidv4();
+                        $(d).find('label').attr('for', inp);
+                        $(d).find('input').attr('id', inp);
+                        $(d).find('input').attr('name', inp);
+                        $(d).find('select').attr('name', inp);
+                        $(d).find('select').attr('id', inp);
+                        $(d).find('textarea').attr('id', inp);
+                        $(d).find('textarea').attr('name', inp);
+                        $(d).find('.f-field-group').each(function(e, f) {
+                            var inp = uuidv4();
+                            $(f).find('label').attr('for', inp);
+                            $(f).find('input').attr('id', inp);
+                            $(f).find('input').attr('name', inp);
+                            $(f).find('select').attr('name', inp);
+                            $(f).find('select').attr('id', inp);
+                            $(f).find('textarea').attr('id', inp);
+                            $(f).find('textarea').attr('name', inp);
+                            $(f).find('.f-field-group').each(function(g, h) {
+                                $(h).find('.f-radio').each(function(i, j) {
+                                    var inp = uuidv4();
+                                    $(j).find('input').attr('id', inp);
+                                    $(j).find('input').attr('name', inp);
+                                });
+                                $(h).find('.f-checkbox').each(function(k, l) {
+                                    var inp = uuidv4();
+                                    $(l).find('input').attr('id', inp);
+                                    $(l).find('input').attr('name', inp);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+
+            $(document).on('mouseenter', '.remove-input-group', function() {
+                $(this).closest('.formeo-row').addClass('will-remove');
+            }).on('mouseleave', '.remove-input-group', function() {
+                $(this).closest('.formeo-row').removeClass('will-remove');
+            }).on('click', '.remove-input-group', function() {
+                $(this).parent('div').remove();
+            });
+
+            $('#btnSave').on('mousedown', function() {
+                window.onbeforeunload = null;
+            });
+            function bindNav() {
+                window.onbeforeunload = function() {
+                    return "Navigating away from this page will discard entries. Click cancel to save or Ok to discard";
+                }
+            }
+
+            $('#btnClose.close').click(function() { $('#dvForm').slideUp('slow'); mForm.empty(); })
+            $('.ftypes').change(function() {
+                if ($(this).val() == '') {
+                    $('.itm').show('slow');
+                } else {
+                    $('.itm').hide();
+                    var cls = "_" + $(this).val().toLowerCase().replace(' ', '_');
+                    $('.' + cls).show('slow');
+                }
+            });
+        });
+    </script>
+}

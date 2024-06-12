@@ -1,0 +1,233 @@
+﻿/* Base Styles */
+
+
+/* Font Styles */
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,300,600,700);
+
+/* tabBox */
+#tabBox {
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
+}
+
+.tabWrap {
+    float: none;
+}
+
+/* Hide Input Radio */
+input[type="radio"] {
+    display: none;
+}
+
+/* Tabs */
+.tab {
+    left: 0px;
+    width: 100%;
+    height: 5px;
+    margin: 0 auto;
+    background: rgba(72, 147, 210, 0.200);
+    border: none;
+    position: relative;
+    cursor: pointer;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+    display: block;
+}
+
+    .tab::before {
+        display: none;
+    }
+
+    .tab::after {
+        content: '';
+        display: none;
+    }
+
+    .tab span {
+        color: #FFF;
+        font-family: 'Open Sans', sans-serif;
+        font-weight: 600;
+        text-align: left;
+        line-height: 65px;
+        display: block;
+    }
+
+.label-01 {
+    z-index: 3;
+}
+
+.label-02 {
+    z-index: 2;
+}
+
+.label-03 {
+    z-index: 1;
+}
+
+/* Display Checked Input */
+.tabWrap [id^="tab"]:checked ~ .tabContent {
+    display: block;
+}
+/* Bring Forward Checked Input */
+.tabWrap [id^="tab"]:checked + label {
+    background: #4388C2;
+    z-index: 4;
+}
+
+.tabWrap [class^="tab label"]:not(.label-01) {
+    margin-left: 0;
+}
+
+/* Unchecked Input Hover */
+.tabWrap [id^="tab"]:not(:checked) + label:hover {
+    background: #4388C2;
+    border: none;
+}
+
+/* Unchecked Input */
+.tabWrap [id^="tab"]:not(:checked) + label::before {
+    background: #F0EEE9;
+}
+
+/* Checked Input No Shadow*/
+.tabWrap [id^="tab"]:checked + label::after {
+    display: none;
+}
+
+/* tabContent */
+.tabContent {
+    width: 90%;
+    height: auto;
+    min-height: 300px;
+    margin: 0 auto;
+    padding: 5%;
+    background: #FFF;
+    box-shadow: 0 4px 0 0 rgba(0,0,0,0.015);
+    position: absolute;
+    /* Multiple .tab Height By Number Of .tab(s) To Get Position Absolute Top */
+    top: 195px;
+    left: 0;
+    display: none;
+    z-index: 1;
+}
+
+    .tabContent h1, p {
+        font-family: 'Open Sans', sans-serif;
+    }
+
+    .tabContent h1 {
+        margin: 0;
+        color: #4893D2;
+        font-size: 1.4em;
+        text-transform: uppercase;
+    }
+
+    .tabContent p {
+        margin: .5em 0;
+        color: #222;
+    }
+
+/* Media Queries */
+@media (min-width: 450px) {
+    #tabBox {
+        width: 400px;
+        margin: 25px auto;
+    }
+
+    .tabWrap {
+        float: left;
+    }
+
+    .tab {
+        width: 130px;
+        height: auto;
+        margin: 0;
+        background: none;
+        border: 50px solid #FFF;
+        border-top: none;
+        border-right: 15px solid transparent;
+        position: relative;
+        cursor: pointer;
+        -webkit-transition: all 0.2s ease-in-out;
+        -moz-transition: all 0.2s ease-in-out;
+        -ms-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+        display: inline-block;
+    }
+
+        .tab::before {
+            content: '';
+            width: 35px;
+            height: 35px;
+            background: #4893D2;
+            border-radius: 350%;
+            position: absolute;
+            top: 11.5px;
+            left: -23.5px;
+            -webkit-transition: all 0.2s ease-in-out;
+            -moz-transition: all 0.2s ease-in-out;
+            -ms-transition: all 0.2s ease-in-out;
+            -o-transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-out;
+            display: block;
+        }
+
+        .tab::after {
+            content: '';
+            width: 90px;
+            height: 2px;
+            background: rgba(0,0,0,0.025);
+            position: absolute;
+            top: 48px;
+            right: -35px;
+            display:block;
+        }
+
+        .tab span {
+            background-color: transparent;
+            line-height: 50px;
+            position: absolute;
+            top: 0;
+            left: -15px;
+        }
+    /* Cancel Checked Input Background */
+    .tabWrap [id^="tab"]:checked + label {
+        background: none;
+    }
+    /* Unchecked Input Hover */
+    .tabWrap [id^="tab"]:not(:checked) + label:hover {
+        background: none;
+        border: 50px solid #F9F9F9;
+        border-top: none;
+        border-right: 15px solid transparent;
+    }
+
+    .tabWrap [class^="tab label"]:not(.label-01) {
+        margin-left: -5px;
+    }
+
+    .tabContent {
+        height: 520px;
+        width: 350px;
+        padding: 25px;
+        position: absolute;
+        top: 50px;
+        left: 0;
+    }
+}
+
+@media (min-width: 550px) {
+    #tabBox {
+        width: 500px;
+    }
+
+    .tabContent {
+        width: 350px;
+    }
+}

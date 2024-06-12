@@ -1,0 +1,91 @@
+﻿<!-- Sidebar Menu -->
+    <ul id="side-main-menu" class="side-menu list-unstyled">
+        <li>
+            <a asp-controller="Home" asp-action="Dashboard">
+                <i class="fa fa-home"></i>Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="~/Forms/Notifications"><i class="fa fa-envelope"></i>Notifications</a>
+        </li>
+        <li>
+            <a href="#eaUnit" data-toggle="collapse">
+                <i class="fa fa-line-chart"></i>Economic Analysis
+            </a>
+            <ul id="eaUnit" class="collapse list-unstyled">
+                <li><a href="~/Forms/Details">Statistical data</a></li>
+                <li><a href="~/Report/Analysis">Data Analysis</a></li>
+                <li><a href="~/Report">View Charts</a></li>
+                <li><a href="~/Report/SurveyReport">View Reports Data</a></li>
+                <li><a href="~/Report/Export">Report Template Builder</a></li>
+                <li><a href="~/Forms/Notifications/?type=@("SURVEY_NOTIFICATION")">Notifications</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#ctUnit" data-toggle="collapse">
+                <i class="fa fa-trophy"></i>Competition & Tariff
+            </a>
+            <ul id="ctUnit" class="collapse list-unstyled">
+                <li><a href="~/Forms/TariffRequest">Submissions</a></li>
+                @*<li><a href="~/Report/TariffExport">Export Tariff Request</a></li>*@
+                <li><a href="~/Report/TariffReport">Tariff Report</a></li>
+                <li><a href="~/Forms/Notifications/?type=@("TARIFF_REQUEST_NOTIFICATION")">Notifications</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="~/Forms/Others"><i class="fa fa-columns"></i> Other Services</a>
+        </li>
+        <li>
+            <a href="#fbUnit" data-toggle="collapse">
+                <i class="fa fa-file"></i>Templates
+            </a>
+            <ul id="fbUnit" class="collapse list-unstyled">
+                <li><a href="~/Forms">Forms</a></li>
+                <li><a href="~/Memos">Memos</a></li>
+                @*<li><a href="~/Forms/Build">Form Builder</a></li>*@
+                @*<li><a href="~/Memos/Create">Memo Builder</a></li>*@
+            </ul>
+        </li>
+        <li>
+            <a href="#sysAdmin" data-toggle="collapse">
+                <i class="fa fa-gears"></i>System Admin
+            </a>
+            <ul id="sysAdmin" class="collapse list-unstyled">
+                <li>
+                    <a asp-controller="UserProfiles" asp-action="Index">
+                        User Manager
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="AppRoles" asp-action="Index">
+                        Roles &amp; Privileges
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Workflows" asp-action="Index">
+                        Workflow  Manager
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="MetaDatas" asp-action="Index">
+                        Dynamic Fields
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="SysConfig" asp-action="Index">
+                        System Config
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#auditTrail" data-toggle="collapse">
+                <i class="fa fa-train"></i>Audit Trail
+            </a>
+            <ul id="auditTrail" class="collapse list-unstyled">
+                <li><a asp-controller="Audits" asp-action="ProcessAudit">Process Audit</a></li>
+                <li><a asp-controller="Audits" asp-action="AuditTrail">System Audit</a></li>
+            </ul>
+        </li>
+    </ul>
+<!-- /.sidebar-menu -->

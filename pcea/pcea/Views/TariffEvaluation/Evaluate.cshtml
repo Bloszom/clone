@@ -1,0 +1,350 @@
+﻿@*@model pcea.Models.TariffEvaluation*@
+
+@{
+    ViewData["Title"] = "Tariff Evaluation";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    //var _model = Model;
+}
+
+@*@section css{*@
+@*<link type="text/css" href=""
+    }*@
+
+<div class="row col-md-12">
+    @if (ViewBag.Message != null)
+    {
+        <label class="text-success text-center">ViewBag.Message</label>
+    }
+    else
+    {
+        <label class="text-danger text-center">Use this page to match submitted Tariff Request Fields with standard Evaluation Parameters.</label>
+    }
+</div>
+
+<a asp-action="TariffRequest" asp-controller="Forms" class="btn btn-sm btn-default"><i class="fa fa-angle-double-left"></i> Return to Tariff Request list</a>
+<div class="row">
+    <label class="text-success col-12" id="msg"></label>
+    <div class="col-md-9">
+        <small class="text-uppercase text-bold">@ViewBag.OperatorId, &nbsp; @ViewBag.FormName</small>
+    </div>
+    <div class="col-md-3">
+        <small class="text-danger text-bold pull-right">Submitted on: &nbsp; @ViewBag.DateSubmitted</small>
+    </div>
+    <div class="col-md-12">
+        <div id="divFormId">@ViewBag.FormId</div>
+        <div id="divEntryId">@ViewBag.EntryId</div> 
+        <hr />
+    </div>
+    <div id="render-loader" class="_loader col-md-12 text-center" style="display: none">
+        <div class="text-center"><img src="~/img/loading.gif" /></div>
+    </div>
+    <div id="render-body" class="col-md-12 _body" style="display: none">
+        <div class="col-md-12 nowrap">
+            <form class="form-inline">
+                <div class="form-group">
+                    <small class="text-uppercase">Tariff Request Fields</small>
+                    <select class="form-control" id="tariffFields">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <i class="fa fa-angle-double-left"></i>&nbsp; as &nbsp;
+                    <i class="fa fa-angle-double-right"></i>
+                </div>
+                <div class="form-group">
+                    @Html.DropDownList("Parameters", new SelectList(Enum.GetValues(typeof(Parameters))), new { @class = "form-control", @id = "parameters" })
+                </div>
+                <div class="form-group">
+                    <a href="javascript: SaveMatchedParameter();" class="btn btn-outline-success">
+                        <i class="fa fa-angle-double-left"></i>&nbsp;Match&nbsp;<i class="fa fa-angle-double-right"></i>
+                    </a>
+                </div>
+            </form>
+
+            <div>
+                <div id="render-loader-table" class="_loaderTable text-center">
+                    <div class="text-center"><img src="~/img/loading.gif" /></div>
+                </div>
+                <div id="render-body-table" class="_bodyTable">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <hr />
+        </div>
+        <div class="col-md-12 _evaluate" id="render-report">
+            <a href="javascript: EvaluateTariffRequest();" class="btn btn-sm btn-primary pull-right">Start Evaluation >></a>
+        </div>
+        <div class="col-md-12 _report" id="render-preview" style="display:none">
+            <a href="~/TariffEvaluation/TariffAnalysisReport/@ViewBag.EntryId" class="nowrap pull-right">Click here to view evaluated report </a>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts{
+    <script src="~/assets/vendor/multiselect/js/jquery.multi-select.js"></script>
+
+    <script type="text/javascript">
+        function DisplayBody(){
+            try {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:normal');
+            } catch (e) {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:none');
+            }
+        }
+        function DisplayLoader() {
+            try {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:normal');
+                $('._body').attr('style', 'display:none');
+            } catch (e) {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:none');
+            }
+        }
+        function DisplayTableBody() {
+            try {
+                $('._loaderTable').removeAttr('style');
+                $('._bodyTable').removeAttr('style');
+
+                $('._loaderTable').attr('style', 'display:none');
+                $('._bodyTable').attr('style', 'display:normal');
+            } catch (e) {
+                $('._loaderTable').removeAttr('style');
+                $('._bodyTable').removeAttr('style');
+
+                $('._loaderTable').attr('style', 'display:none');
+                $('._bodyTable').attr('style', 'display:none');
+            }
+        }
+        function DisplayTableLoader() {
+            try {
+                $('._loaderTable').removeAttr('style');
+                $('._bodyTable').removeAttr('style');
+
+                $('._loaderTable').attr('style', 'display:normal');
+                $('._bodyTable').attr('style', 'display:none');
+            } catch (e) {
+                $('._loaderTable').removeAttr('style');
+                $('._bodyTable').removeAttr('style');
+
+                $('._loaderTable').attr('style', 'display:none');
+                $('._bodyTable').attr('style', 'display:none');
+            }
+        }
+        function DisplayReportPreview() {
+            try {
+                $('._evaluate').removeAttr('style');
+                $('._report').removeAttr('style');
+
+                $('._evaluate').attr('style', 'display:none');
+                $('._report').attr('style', 'display:normal');
+            } catch (e) {
+                $('._report').removeAttr('style');
+                $('._evaluate').removeAttr('style');
+
+                $('._report').attr('style', 'display:none');
+                $('._evaluate').attr('style', 'display:normal');
+            }
+        }
+        function GetFormFields() {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                DisplayLoader();
+                $.ajax({
+                    url: "/TariffEvaluation/GetFormFields",
+                    type: "POST",
+                    data: {"lFormId": sFormId},
+                    dataType: 'json',
+                    success: function (response) {
+                        $.each(response.fields, function (i, v) {
+                            //alert(v1);
+                            var vl = v.replace(/(<([^>]+)>)/gi, "");
+                            //vl = vl.replace('&nbsp;', ' ');
+                            vl = vl.replace('&nbsp;', ' ').replace('&amp;', '&');
+                            //
+                            //alert(v1);
+                            $('#tariffFields').append($('<option>', { value: vl + ' »' + i, text: vl + ' »' + i }).attr('title', vl + ' »' + i));
+                        });
+                        $("#tariffFields").html($("#tariffFields option").sort(function (a, b) {
+                            return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+                        }))
+                        DisplayBody();
+                    },
+                    error: function (err) {
+                        alert(err);
+                        DisplayBody();
+                    }
+                });
+            }
+            catch (e) {
+                DisplayBody();
+            }
+        }
+        function GetMatchedParameters() {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                DisplayTableLoader();
+                $.ajax({
+                    type: "GET",
+                    url: "/TariffEvaluation/GetMatchedParameters",
+                    contentType: "application/json; charset=utf-8",
+                    data: { "lEntryId": sEntryId},
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#render-body-table').html(data.responseText);
+                        GetTariffAnalysisReport();
+                        DisplayTableBody();
+                    },
+                    error: function (data) {
+                        $('#render-body-table').html(data.responseText);
+                        GetTariffAnalysisReport();
+                        DisplayTableBody();
+                    }
+                });
+            }
+            catch (e) {
+                DisplayTableBody();
+            }
+        }
+        function SaveMatchedParameter() {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                var sField = $("#tariffFields").val();
+                sField = sField.replace('&nbsp;', ' ');
+                var sParm = $("#parameters").val();
+                DisplayTableLoader();
+                $.ajax({
+                    type: "GET",
+                    url: "/TariffEvaluation/SaveMatchedParameter",
+                    contentType: "application/json; charset=utf-8",
+                    data: {"lFormId": sFormId, "lEntryId": sEntryId, "sField": sField, "sParm": sParm},
+                    dataType: 'json',
+                    success: function (data) {
+                        //$('#render-body-table').html(data);
+                        DisplayTableBody();
+                        $('#render-body-table').html(data.responseText);
+                    },
+                    error: function (data) {
+                        //alert(@ViewBag.Message);
+                        DisplayTableBody();
+                        $('#render-body-table').html(data.responseText);
+                    }
+                });
+            }
+            catch (e) {
+                DisplayTableBody();
+            }
+        }
+        function DeleteMatchedParameter(lRecId) {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                DisplayTableLoader();
+                $.ajax({
+                    url: "/TariffEvaluation/DeleteMatchedParameter",
+                    type: "GET",
+                    data: { "lRecId": lRecId, "lEntryId": sEntryId},
+                    dataType: 'json',
+                    success: function (data) {
+                        //$('#render-body-table').html(data);
+                        DisplayTableBody();
+                        $('#render-body-table').html(data.responseText);
+                    },
+                    error: function (data) {
+                        //alert(err);
+                        DisplayTableBody();
+                        $('#render-body-table').html(data.responseText);
+                    }
+                });
+            }
+            catch (e) {
+                DisplayTableBody();
+            }
+        }
+        function EvaluateTariffRequest() {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                DisplayLoader();
+                $.ajax({
+                    type: "GET",
+                    url: "/TariffEvaluation/EvaluateTariffRequest",
+                    contentType: "application/json; charset=utf-8",
+                    data: { "lFormId": sFormId, "lEntryId": sEntryId},
+                    dataType: 'json',
+                    success: function (data) {
+                        //$('#render-body-table').html(data.responseText);
+                        DisplayBody();
+                        DisplayReportPreview();
+                    },
+                    error: function (data) {
+                        //alert(data.responseText);
+                        DisplayBody();
+                        DisplayReportPreview();
+                        //GetTariffAnalysisReport();
+                    }
+                });
+                //GetTariffAnalysisReport();
+            }
+            catch (e) {
+                DisplayBody();
+            }
+        }
+        function GetTariffAnalysisReport() {
+            try {
+                var sFormId = $("#divFormId").html();
+                var sEntryId = $("#divEntryId").html();
+                $.ajax({
+                    type: "GET",
+                    url: "/TariffEvaluation/GetTariffAnalysisReport",
+                    contentType: "application/json; charset=utf-8",
+                    data: {"lEntryId": sEntryId},
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.EntryId != null) {
+                            //there is evaluation report for this analysis.  Disable the StartEvaluation button.
+                            var msg = "<br /><a href=\"~/TariffEvaluation/TariffAnalysisReport/" + sEntryId + "\" class=\"text-danger text-bold\"> Click here to view the evaluation report</a>"
+                            $('#render-report').html(msg);
+                        }
+                        //
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                        $('#render-report').html(data.responseText);
+                        //
+                    }
+                });
+            }
+            catch (e) {
+                DisplayBody();
+            }
+        }
+
+
+
+        $().ready(function () {
+            //set stage for evaluation
+            GetFormFields();
+            GetMatchedParameters();
+
+        })
+
+    </script>
+}

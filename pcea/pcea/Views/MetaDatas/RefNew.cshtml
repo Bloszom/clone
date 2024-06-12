@@ -1,0 +1,60 @@
+﻿@model pcea.Models.MetaDataRef
+
+@if (ViewBag.message != null)
+{
+    <div class="text-center small"><div class="text-danger">@ViewBag.message</div></div>
+}
+
+<dl class="row">
+    <dt class="col-sm-4">
+        @Html.DisplayNameFor(model => model.MetaDataType)
+    </dt>
+    <dd class="col-sm-8" id="metaType">
+        @ViewBag.MetaDataType
+    </dd>
+    <dt class="col-sm-4">
+        @Html.DisplayNameFor(model => model.ReferenceId)
+    </dt>
+    <dd class="col-sm-8">
+        @Html.TextBoxFor(model => model.ReferenceId, new { @class = "form-control form-control-sm", @placeholder = "Enter Field Description", @id = "refId" })
+    </dd>
+</dl>
+<div class="text-center row">
+    <div class="col-md-12">
+        <input type="submit" value="Save" class="btn btn-sm btn-block btn-outline-primary ladda-button" id="btnSaveRef" name="btnSaveRef" />
+    </div>
+</div>
+
+
+
+<script>
+    //-------------POST Status Changes----------------------
+    $(function () {
+
+        $("#btnSaveRef").click(function () {
+            var metaref = new Object();
+            metaref.MetaType = document.getElementById("metaType").innerHTML.trim();
+            metaref.RefId = $('#refId').val();
+            if (metaref != null) {
+                $.ajax({
+                    type: "GET",
+                    url: "/MetaDatas/SaveNewRef",
+                    data: { "sMetaType": metaref.MetaType, "sRefId": metaref.RefId },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    complete: function (response) {
+                        if (response.status == "error") {
+                            alert("Record Addition failed...Contact Administrator!");
+                            location.reload();
+                        }
+                        else {
+                            $('#RefModalNew').modal('hide');
+                            alert("Record Added Successfully");
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>

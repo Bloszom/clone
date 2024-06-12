@@ -1,0 +1,77 @@
+﻿@model IEnumerable<pcea.Models.TariffAnalysisReport>
+@{
+    ViewData["Title"] = "Tariff Evaluation Report";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+    <a asp-action="TariffRequest" asp-controller="Forms" class="btn btn-sm btn-default"><i class="fa fa-angle-double-left"></i> Return to Tariff Request list</a>
+    <div class="row">
+        <label class="text-success col-12" id="msg"></label>
+        <div class="col-md-9">
+            <small class="text-uppercase text-bold">@ViewBag.OperatorId, &nbsp; @ViewBag.FormName</small>
+        </div>
+        <div class="col-md-3">
+            <small class="text-danger text-bold pull-right">Submitted on: &nbsp; @ViewBag.DateSubmitted</small>
+        </div>
+        <div class="col-md-12">
+            <hr />
+        </div>
+        <div class="col-md-12">
+            <table class="table table-borderless table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.ParameterId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Amount)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.BurnRate)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.EffectiveTariff)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null)
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr class="nowrap">
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.ParameterId)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Amount)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.BurnRate)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.EffectiveTariff)
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td class="px-0" colspan="4"><h4 class="text-center">No evaluation report</h4></td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+
+@section scripts{
+
+    <script>
+
+    </script>
+
+
+}

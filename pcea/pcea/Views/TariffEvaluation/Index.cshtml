@@ -1,0 +1,65 @@
+﻿@model IEnumerable<pcea.Models.FormsAndEntry>
+
+@{
+    //ViewData["Title"] = ViewBag.title != null ? ViewBag.title : "List of Survey Responses";
+    //bool isSurvey = ViewContext.RouteData.Values["Action"].ToString() == "Details";
+
+    @*if (ViewBag.error != null)
+        {
+            <div class="text-small text-center text-danger">@ViewBag.error</div>
+        }*@
+    //var flds = ViewBag.fields != null ? ViewBag.fields.Count : 0;
+    //string survTxt = isSurvey ? "Select Survey/Questionnaire" : "Select Tariff Request";
+}
+
+
+<div class="table-responsive" style="">
+    @using (Html.BeginForm(FormMethod.Post))
+    {
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th class="px-0 bg-transparent border-top-0">
+                        <span class="text-dark"><i class="fa fa-file"></i> FORMS</span>
+                    </th>
+                    <th class="px-0 bg-transparent border-top-0 text-right">
+                        <a asp-action="Build" class="btn btn-primary btn-sm">
+                            <i class="fa fa-plus"></i> Add New Form
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @if (Model != null)
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="px-0">
+                                <h5 style="margin-bottom:0;font-weight:normal;">
+                                    @item.FormName
+                                </h5>
+                                <small class="text-black-50">
+                                    <span title="Total number of submission" class="text-info">(@item.OperatorId) reply</span>&nbsp; &bull; &nbsp;
+                                    <span title="date created" class="text-info">created: item.DateSubmitted</span>
+                                </small>
+                            </td>
+                            <td class="px-0 text-right ">
+                                <a href="@Url.ActionLink("Evaluate")/@item.RecId" class="als-item btn btn-outline-primary btn-sm" title="View/Edit this form"><i class="fa fa-edit"></i></a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+
+

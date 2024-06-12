@@ -1,0 +1,71 @@
+﻿@*@model pcea.Models.Login*@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Economic Analysis &amp; Tariff Administration</title>
+        <meta name="description" content="Economic Analysis and Tariff Administration">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="~/assets/vendor/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="~/assets/css/fontastic.css">
+        <link rel="stylesheet" href="~/assets/fontisto/fontisto.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+        <link rel="stylesheet" href="~/assets/css/grasp_mobile_progress_circle-1.0.0.min.css">
+        <link rel="stylesheet" href="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.css">
+        <link rel="stylesheet" href="~/assets/css/style.blue.premium.css" id="theme-stylesheet">
+        <link rel="stylesheet" href="~/assets/css/custom.css">
+        <link rel="shortcut icon" href="~/assets/img/favicon.ico">
+    </head>
+    <body>
+        <div class="page login-page">
+            <div class="container">
+                <div class="form-outer text-center d-flex align-items-center">
+                    <div class="form-inner">
+                        <div class="text-center">
+                            <img src="~/assets/img/ncclogo.svg" alt="Nigerian Communications Commission" style="max-width: 7rem;" class="img-fluid">
+                            <div class="logo text-uppercase" style="font-size:medium">
+                                <br /><span>Economic Analysis</span> &amp;
+                                <strong class="text-primary">Tariff Administration</strong>
+                            </div>
+                            <h3 class="display-5 mb-4">
+                                <br />Goodbye
+                            </h3>
+                        </div>
+                        @*<p class="text-danger">@ViewBag.Message</p>*@
+                    <form id="dvResponse" method="post">
+                        <p class="text-danger">@ViewBag.Message</p>
+                        <div class="form-group-material">
+                            <div class="d-flex justify-content-center pt-5 pb-5">
+                                <i class="fa fa-5x fa-warning faa-flash animated" style="color:indianred"></i>
+                            </div>
+                        </div>
+                        <div class="form-group text-center">
+                            <p class="text-danger">@ViewBag.Progress</p>
+                        </div>
+                    </form>
+                        <a href="@ViewBag.SsoUrl" class="forgot-pass">Goto NCC Apps</a>
+                    </div>
+                    <div class="copyrights text-center">
+                        <p>Copyright &copy; @DateTime.Now.Year</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- JavaScript files-->
+        <script src="~/assets/vendor/jquery/jquery.min.js"></script>
+        <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="~/assets/js/grasp_mobile_progress_circle-1.0.0.min.js"></script>
+        <script src="~/assets/vendor/jquery.cookie/jquery.cookie.js"></script>
+        <script src="~/assets/vendor/chart.js/Chart.min.js"></script>
+        <script src="~/assets/vendor/jquery-validation/jquery.validate.min.js"></script>
+        <script src="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
+        <!-- Main File-->
+        <script src="~/assets/js/front.js"></script>
+
+    </body >
+</html >

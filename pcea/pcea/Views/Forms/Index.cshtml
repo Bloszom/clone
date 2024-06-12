@@ -1,0 +1,141 @@
+﻿@model IEnumerable<pcea.Models.FormsSubmission>
+
+@{
+    ViewData["Title"] = "List of Forms/Questionnaire";
+}
+
+@if (TempData["message"] != null)
+{
+    <div class="text-center small w-75 m-auto bg-success text-white p-2">@TempData["message"]</div>
+}
+@if (TempData["error"] != null)
+{
+    <div class="text-center small w-75 m-auto bg-danger text-white p-2">@TempData["error"]</div>
+}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="px-0 bg-transparent border-top-0">
+                    <span class="text-dark"><i class="fa fa-file"></i> FORMS</span>
+                </th>
+                <th class="px-0 bg-transparent border-top-0 text-right">
+                    <a asp-action="Build" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Add New Form
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="px-0">
+                            <h5 style="margin-bottom:0;font-weight:normal;">
+                                @item.FormName
+                            </h5>
+                            <small class="text-black-50">
+                                <span title="Total number of submission" class="text-info">(@item.Submission) reply</span>&nbsp; &bull; &nbsp;
+                                <span title="date created" class="text-info">created: @item.FormDate(item.DateCreated)</span>
+                            </small>
+                        </td>
+                        <td class="px-0 text-right">
+                            @if (!item.Published)
+                            {
+                                <a href="@Url.ActionLink("Build")/@item.RecId" class="btn btn-outline-primary btn-sm" title="View/Edit this form"><i class="fa fa-edit"></i></a>
+                                <a href="@Url.ActionLink("Delete")/@item.RecId" class="btn btn-outline-danger btn-sm" title="Delete this form" onclick="return confirm('Are you sure you want to delete this form (@item.FormName)?')"><i class="fa fa-trash"></i></a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-secondary btn-sm termbtn" data-id="@item.RecId" title="Extend Terminal Date for this form"><i class="fa fa-ellipsis-v"></i></button>
+                            }
+
+                            <a href="@Url.ActionLink("Duplicate")/@item.RecId" class="btn btn-outline-info btn-sm" title="Duplicate this form"><i class="fa fa-copy"></i></a>
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+    <!-- Terminal Date Extension -->
+    <div class="modal fade" id="modalExtendTerm">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Extend Terminal Date</h4>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <div id="modalExtendTermLoader" class="modal-body">
+                    <div class="text-center"><img src="~/img/loading.gif" /></div>
+                </div>
+                <div id="modalExtendTermBody" class="modal-body task-body">
+                    <form asp-action="ExtendTerminalDate">
+                        <dl class="row">
+                            <dt class="col-sm-5">
+                                Current Terminal Date
+                            </dt>
+                            <dd class="col-sm-7">
+                                <h4 class="termDate"></h4>
+                            </dd>
+                            <dt class="col-sm-5">
+                                New Terminal Date
+                            </dt>
+                            <dd class="col-sm-7">
+                                <input name="NewTerminalDate" id="NewTerminalDate" required type="date" class="form-control"/>
+                            </dd>
+                        </dl>
+                        <div class="w-100 text-center">
+                            <input name="RecId" id="RecId" type="hidden" />
+                            <button class="ladda-button btn btn-primary w-75" data-style="expand-right">
+                                <span class="ladda-label"><i class="fa fa-paper-plane"></i>   Submit</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Workflow/Tasks Management /-->
+
+@section Scripts
+{
+    <script>
+        $(".termbtn").click(function(){
+            var modal = $("#modalExtendTerm");
+            $("#modalExtendTermLoader").show();
+            $("#modalExtendTermBody").addClass("d-none")
+            modal.modal("show");
+
+            var id = $(this).data("id");
+            $("#RecId").val(id);
+            $.ajax({
+                url: "/Forms/GetTerminalDate",
+                type: "GET",
+                data: {"id": id},
+                complete: function(response){
+                    console.log(response);
+
+                    if(response.responseJSON.success)
+                    {
+                        $(".termDate").html(response.responseJSON.date);
+                        $("#modalExtendTermLoader").hide();
+                        $("#modalExtendTermBody").removeClass("d-none");
+                    }
+                    else
+                    {
+                        alert("There was an error! Please try again");
+                    }
+                }
+            });
+        });
+    </script>
+}

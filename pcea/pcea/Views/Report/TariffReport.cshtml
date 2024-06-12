@@ -1,0 +1,232 @@
+﻿@{
+    ViewData["Title"] = "Tariff Report";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@if (ViewBag.error != null || TempData["error"] != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+    <div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+}
+@if (ViewBag.message != null || TempData["message"] != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+    <div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+}
+<div class="w-100 text-right mb-5">
+    <button id="btnHistory" class="btn btn-primary pull-right" onclick="    javascript: OpenForm();"><i
+            class="fa fa-cloud"></i> Add Historical Data</button>
+</div>
+<div class="row mt-2">
+    <div class="col-md-12 col-sm-12">
+        <div class="form-inline mb-2">
+            <i class="fa fa-file fa-2x text-gray"></i> &nbsp; &nbsp;
+            @Html.DropDownList("Operator", (SelectList)ViewBag.ops, "Select operator", new { @class =
+            "form-control col-md-2" })
+             &nbsp;
+             &nbsp;
+            @Html.DropDownList("Report", (SelectList)ViewBag.TariffList, "Select tariff type", new { @class =
+            "form-control col-md-2" })
+            &nbsp;
+            Date(From):
+            &nbsp;
+            @Html.TextBox("DateFrom", null, new { @class = "form-control col-md-2", @type = "date" }) &nbsp;
+            Date(To):
+            &nbsp;
+            @Html.TextBox("DateTo", null, new { @class = "form-control col-md-2", @type = "date" }) &nbsp;  &nbsp;
+
+            <button id="btnLoad" class="btn btn-secondary" type="button">Load
+                <i class="fa fa-angle-double-right"></i>
+             </button>
+        </div>
+    </div>
+</div>
+
+<div id="tab" class="bg-white overflow-auto">
+
+</div>
+
+<!-- Workflow/Tasks Management -->
+<div class="modal fade" id="tarHistory">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Add Historical Data</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">×</span></button>
+            </div>
+            <div id="" class="modal-body task-body">
+                <form method="post" asp-action="AddTariffHistory" asp-controller="Forms">
+
+                    <div class="container">
+                        <div class="row">
+                            <div class="form-group col-12">
+                                <label>Operator Name</label>
+                                @* @Html.DropDownList("OperatorName", (SelectList)ViewBag.ops, new { @class =
+                                    "form-control", @name="OperatorName", @id="OperatorName", @Required = true }) *@
+
+                                <input name="OperatorName" id="OperatorName" class="form-control" required />
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Name of Plan</label>
+                                <input name="PlanName" id="PlanName" Required class="form-control" />
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>License Category</label>
+                                @*<input name="Category" id="Category" class="form-control" />*@
+                                <select name="Category" id="Category" Required class="form-control">
+                                    <option label="AVTS" value="AVTS">AVTS</option>
+                                    <option label="Collocation/Infrastructure" value="Collocation/Infrastructure">
+                                        Collocation/Infrastructure</option>
+                                    <option label="DML" value="DML">DML</option>
+                                    <option label="Interconnect Exchange" value="Interconnect Exchange">Interconnect
+                                        Exchange</option>
+                                    <option label="International Gateway" value="International Gateway">International
+                                        Gateway</option>
+                                    <option label="International Data Access" value="International Data Access">
+                                        International Data Access</option>
+                                    <option label="Internet Service Provider" value="Internet Service Provider">Internet
+                                        Service Provider</option>
+                                    <option label="International Cable Infrastructure"
+                                        value="International Cable Infrastructure">International Cable Infrastructure
+                                    </option>
+                                    <option label="Metropolitan Fibre Cable" value="Metropolitan Fibre Cable">
+                                        Metropolitan Fibre Cable</option>
+                                    <option label="National Carrier" value="National Carrier">National Carrier</option>
+                                    <option label="National Long Distance" value="National Long Distance">National Long
+                                        Distance</option>
+                                    <option label="Non-Comercial Close User" value="Non-Comercial Close User">
+                                        Non-Comercial Close User</option>
+                                    <option label="Open Access Fibre (Infraco)" value="Open Access Fibre (Infraco)">Open
+                                        Access Fibre (Infraco)</option>
+                                    <option label="PNL-Local Exchange" value="PNL-Local Exchange">PNL-Local Exchange
+                                    </option>
+                                    <option label="PNL-National" value="PNL-National">PNL-National</option>
+                                    <option label="PNL-Regional" value="PNL-Regional">PNL-Regional</option>
+                                    <option label="Sales &amp; Inst" value="Sales &amp; Inst">Sales &amp; Inst</option>
+                                    <option label="Unified Access Services" value="Unified Access Services">Unified
+                                        Access Services</option>
+                                    <option label="USAL" value="USAL">USAL</option>
+                                    <option label="Value Added Services" value="Value Added Services">Value Added
+                                        Services</option>
+                                    <option label="Wholesale Wireless Access Service"
+                                        value="Wholesale Wireless Access Service">Wholesale Wireless Access Service
+                                    </option>
+                                    <option label="Central Equipment Identification Registry "
+                                        value="Central Equipment Identification Registry ">Central Equipment
+                                        Identification Registry </option>
+                                    <option label="PMC (Trunk Radio)" value="PMC (Trunk Radio)">PMC (Trunk Radio)
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <labe>Plan Type Category</label>
+                                    <select name="PlanTypeCategory" required id="PlanTypeCategory" class="form-control">
+                                        <option>NEW</option>
+                                        <option>MODIFICATION</option>
+                                    </select>
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Plan Type</label>
+                                @Html.DropDownList("PlanType", (SelectList)ViewBag.frmTypes, "Select a form type", new {
+                                @class = "form-control", @name="PlanType", @id="PlanType" })
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Short Code</label>
+                                <input name="ShortCode" id="ShortCode" class="form-control" />
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Submission Date</label>
+                                <input type="date" name="SubmissionDate" Required id="SubmissionDate"
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group col-12">
+                                <label>Description</label>
+                                <textarea name="Description" id="Description" Required class="form-control"></textarea>
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Decision</label>
+                                @*<input name="Decision" id="Decision" Required class="form-control" />*@
+                                <select name="Decision" id="Decision" Required class="form-control">
+                                    <option label="APPROVED" value="APPROVED">APPROVED</option>
+                                    <option label="REJECTED" value="REJECTED">REJECTED</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6 col-sm-12">
+                                <label>Processed By</label>
+                                @Html.DropDownList("Processor", (SelectList)ViewBag.admins, new {@class =
+                                "form-control", @name="Processor", @id="Processor"})
+                            </div>
+                            <div class="form-group col-md-4 col-sm-12">
+                                <label>Date of Conveyance</label>
+                                <input type="date" name="ConveyanceDate" Required id="ConveyanceDate"
+                                    class="form-control" />
+                            </div>
+
+                            <div class="form-group col-md-4 col-sm-12">
+                                <label>Expected Expiry Date</label>
+                                <input type="date" name="ExpectedExpiryDate" Required id="ExpectedExpiryDate"
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group col-md-4 col-sm-12">
+                                <label>Expected Launch Date</label>
+                                <input type="date" name="ExpectedLaunchDate" Required id="ExpectedLaunchDate"
+                                    class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer mt-4">
+                        <div class="w-100 text-center">
+                            <button type="submit" class="btn btn-primary w-25"><i class="fa fa-paper-plane"></i>
+                                Save</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Workflow/Tasks Management /-->
+
+
+@section Scripts{
+<script src="~/js/jquery.table2excel.js"></script>
+<script type="text/javascript">
+
+    $('#Report').change(function () {
+        $('#DateFrom').val("");
+        $('#DateTo').val("");
+    });
+
+    $('#btnLoad').click(function () {
+
+        var fa = $(this).find('i');
+        fa.attr('class', 'fa fa-gear fa-spin text-danger');
+        $.ajax({
+            url: "/Report/ReportData",
+            type: "POST",
+            data: { "reportId": $('#Report').val(),"operatorId": $('#Operator').val(), "from": $('#DateFrom').val(), "to": $('#DateTo').val() },
+            dataType: 'json',
+            success: function (response) {
+                $('#tab').html("");
+                $('#tab').append(response);
+                fa.attr('class', 'fa fa-angle-double-right');
+            },
+            error: function (err) {
+                console.log("error:" + err);
+                fa.attr('class', 'fa fa-angle-double-right');
+            }
+        });
+    });
+
+    $(document).on('click', '#btnExport', function () {
+        $("#tblExport").table2excel({
+            name: "Tariff Report",
+            filename: "TariffReport",//do not include extension
+            fileext: ".xls" // file extension
+        });
+    });
+
+</script>
+}

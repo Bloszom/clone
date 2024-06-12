@@ -1,0 +1,82 @@
+﻿@model pcea.Models.FormsAndEntry;
+
+@if (ViewBag.ActionType == "modalDetails")
+{
+    Layout = null;
+
+    <form method="post" asp-action="PreloadMemo" asp-controller="Forms" enctype="multipart/form-data">
+        <div class="form-group m-2">
+            <label class="control-label text-bold">Select the memo template of your choice</label>
+            @if (Model.MemoList.Count != 0)
+            {
+                <select asp-for="@Model.MemoContent" asp-items="@Model.MemoList" class="form-control">
+                    <option selected disabled>Select Memo</option>
+                </select>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            }
+            else
+            {
+                <p class="text-danger">No Memo Template Is Available Yet</p>
+            }
+
+            <input class="form-control" asp-for="ProcessId" hidden="hidden" />
+            <input class="form-control" asp-for="EntryId" hidden="hidden" />
+            <input class="form-control" type="hidden" asp-for="ProductName" />
+            <input class="form-control" type="hidden" asp-for="OrganizationName" />
+            <div class="pull-right mt-2">
+                <button class="btn btn-secondary btn-sm" type="button" data-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                <button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-check"></i> Ok</button>
+            </div>
+        </div>
+    </form>
+
+}
+else @if (ViewBag.ActionType == "PreloadMemo")
+{
+    @section Css {
+    <link rel="stylesheet" href="~/assets/summernote/summernote-bs4.css" type="text/css" />
+    }
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+    <a asp-action="TariffRequest" asp-controller="Forms" class="btn btn-sm btn-default mb-3"><i class="fa fa-angle-double-left"></i> Return to list of submitted requests </a>
+
+    <form asp-action="SaveMemoContent" asp-controller="Forms" method="post">
+        <h4 class="mb-3 text-center">
+            @if (@Model.OrganizationName != "undefined" && !string.IsNullOrEmpty(@Model.OrganizationName))
+            {
+                var str = $"{@Model.OrganizationName} ({@Model.ProductName})";
+                @str
+                ;
+            }
+            else
+            {
+                @Model.ProductName
+            }
+        </h4>
+        <input type="hidden" asp-for="EntryId" />
+        <input type="hidden" asp-for="ProcessId" />
+        <div class="row">
+
+            <div class="col-md-12 form-group form-group-sm">
+                <label asp-for="MemoContent" class="control-label"></label>
+                <textarea asp-for="MemoContent" class="summernote"></textarea>
+                <span asp-validation-for="MemoContent" class="text-danger"></span>
+            </div>
+            <div class="col-md-12 form-group form-group-sm">
+                <input type="submit" value="Save Memo" class="btn btn-primary pull-right" />
+            </div>
+        </div>
+    </form>
+
+    @section Scripts {
+    <script src="~/assets/summernote/summernote-bs4.min.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            $('.summernote').summernote({
+                height: 500
+            });
+        });
+    </script>
+    }
+}

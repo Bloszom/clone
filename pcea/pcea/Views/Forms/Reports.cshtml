@@ -1,0 +1,96 @@
+﻿
+@{
+    ViewData["Title"] = "Analytic View of responses";
+}
+<div class="row" style="margin-top:-50px;">
+    <div class="col-md-12 col-sm-12">
+        <div class="form-inline pull-right mb-4" style="">
+            <i class="fa fa-file fa-2x text-gray"></i> &nbsp; &nbsp;
+            @Html.DropDownList("Survey", new SelectList(ViewBag.SurveyList, "RecId", "FormName"), "Select Survey", new { @class = "form-control" })
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <canvas id="bChart">
+                </canvas>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-striped table-bordered">
+                    <thead><tr><th>&nbsp;</th></tr></thead>
+                    <tbody><tr><td>&nbsp;</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+
+    <script src="~/assets/vendor/chart.js/Chart.min.js"></script>
+    <script type="text/javascript">
+        $().ready(function () {
+
+            'use strict';
+
+            var BARCHARTEXMPLE = $('#bChart');
+            var barChartExample = new Chart(BARCHARTEXMPLE, {
+                type: 'bar',
+                data: {
+                    labels: ["January", "February", "March", "April", "May", "June", "July"],
+                    datasets: [
+                        {
+                            label: "Data Set 1",
+                            backgroundColor: [
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)',
+                                'rgba(51, 179, 90, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)',
+                                'rgba(51, 179, 90, 1)'
+                            ],
+                            borderWidth: 1,
+                            data: [65, 59, 80, 81, 56, 55, 40],
+                        },
+                        {
+                            label: "Data Set 2",
+                            backgroundColor: [
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)',
+                                'rgba(203, 203, 203, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)',
+                                'rgba(203, 203, 203, 1)'
+                            ],
+                            borderWidth: 1,
+                            data: [35, 40, 60, 47, 88, 27, 30],
+                        }
+                    ]
+                }
+            });
+        });
+    </script>
+}

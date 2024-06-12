@@ -1,0 +1,606 @@
+﻿@model IEnumerable<FormsOperators>
+
+@section Css {
+    <link rel="stylesheet" href="~/dist/formeo.min.css" type="text/css" />
+    <style>
+        #dvForm {
+            display: none;
+        }
+
+        .lbl {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+
+        .no-edit {
+            pointer-events: none;
+        }
+
+        .file-link {
+            pointer-events: all;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        #dvGroup {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+}
+
+    @{
+    ViewData["Title"] = "Other Services";
+    Layout = "~/Views/Shared/_LayoutOperator.cshtml";
+
+
+
+    if (ViewBag.error != null || TempData["error"] != null)
+    {
+        string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+        <div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+    }
+    if (ViewBag.message != null || TempData["message"] != null)
+    {
+        string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+        <div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+    }
+
+    List<Forms> reasonForms = ViewBag.forms;
+    List<FormsReview> reviews = ViewBag.review;
+}
+
+<div class="form-group">
+    <small> Fill New Request </small>
+    <div class="form-inline">
+        <i class="fa fa-file fa-2x"></i>
+        @Html.DropDownList("cRequest", new SelectList(reasonForms.TakeWhile(m => m.TerminalDate.Ticks >= DateTime.Now.Ticks), "RecId", "FormName"), "--Request Forms--", new { @class = "form-control" })
+    </div>
+</div>
+<div class="clearfix"></div>
+
+
+<div id="dvForm" class="border p-3 bg-white mb-2" style="position:relative;">
+    <button class="text-danger close closeDiv right xit" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
+    <button id="btnPrint" type="button" data-toggle="modal" data-target="dvPrint" class="text-secondary close right mr-3" title="Print this form"><i class="fa fa-print"></i></button>
+
+    <div class="text-primary small">
+        <small class="lbl">Operator:</small> <strong class="text-uppercase">@ViewBag.operatorName</strong> <br />
+        <small class="lbl">ID:</small> <strong class="text-uppercase">@ViewBag.operatorID</strong>
+    </div>
+    <form id="dvResponse" enctype="multipart/form-data" method="post">
+        <h3 class="text-center m-5 text-info">Select from any of the listed forms &raquo;&raquo;</h3>
+    </form>
+    <div id="dvGroup" class=" mt-3 pt-3 border-top">
+        @*<div class="btn-post">
+        <button id="btnSave" type="button" data-stats="SAVED" class="btn btn-primary btn-sm"><i class="fa fa-save"></i> Save</button>
+        </div>*@
+        <div class="btn-post w-100 text-right">
+            @*<input type="hidden" name="FormDetails" id="FormDetails" value="" />*@
+            <input type="hidden" name="_formSet" id="_formSet" value="" />
+            <input type="hidden" name="EntryId" id="entr" value="" />
+            <input type="hidden" name="FormId" id="frmId" value="" />
+            <input type="hidden" name="Status" id="Status" value="" />
+            <button id="btnSubmit" type="button" data-stats="SUBMITTED" class="btn btn-success btn-sm"><i class="fa fa-paper-plane"></i> Submit and send to NCC</button>
+            @*<button class="btn btn-secondary btn-sm xit" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i> Close</button>*@
+        </div>
+    </div>
+    <span class="clearfix">&nbsp;</span>
+</div>
+
+@foreach (var itm in reasonForms)
+{
+    <input type="hidden" id="frm_@itm.RecId" name="frm_@itm.RecId" value="@itm.FormFields" />
+}
+<div class="table-responsive bg-white">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="border-top-0">
+                    <span class="text-dark text-uppercase">Previous Submissions</span>
+                </th>
+                <th class="border-top-0 text-right">
+                    <i class="fa fa-mouse-pointer"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                string badgeText = "";
+                string badgeClass = "";
+                @foreach (var item in Model)
+                {
+                    Forms frm = reasonForms.Find(x => x.RecId == item.FormId);
+
+                    string _revStats = string.Empty;
+                    string sts = item.Status.ToLower();
+                    FormsReview frmRev = reviews.Find(e => e.EntryId == item.EntryId);
+
+                    string sClass = "btn-outline-primary";
+                    if (frmRev != null)
+                    {
+                        _revStats = frmRev.Status;
+                    }
+                    else
+                        _revStats = item.Status;
+
+                    var frmInDb = reasonForms.FirstOrDefault(f => f.RecId == item.FormId);
+                    var curdate = DateTime.Now;
+                    if (frmInDb != null)
+                    {
+
+                        if (!string.IsNullOrEmpty(_revStats))
+                        {
+                            if (_revStats.ToLower() == "rejected")
+                            {
+                                sClass = "btn-outline-danger";
+                                badgeClass = "danger";
+                                sts = _revStats;
+                            }
+                            if (sts.ToLower() == "submitted" && _revStats.ToLower() != "re-filled" && _revStats.ToLower() != "rejected")
+                            {
+                                sClass = "btn-outline-secondary";
+                                if (_revStats.ToLower().ToLower() == "pending" || _revStats.ToLower().ToLower() == "submitted")
+                                    badgeClass = "secondary";
+                                else
+                                {
+                                    badgeClass = "success";
+                                }
+
+                                @*sts = _revStats;*@
+                            }
+
+                            badgeText = null;
+
+                            if (sts.ToLower() == "re-filled")
+                            {
+                                sClass = "btn-outline-warning";
+                                badgeClass = "warning";
+                                @*_revStats = sts;*@
+                                badgeText = sts;
+                            }
+                            badgeText = badgeText ?? _revStats;
+
+                            if (string.IsNullOrEmpty(sts) && string.IsNullOrEmpty(_revStats))
+                            {
+                                badgeText = "Not Yet Started!";
+                                badgeClass = "primary";
+                            }
+
+                            if (frm != null)
+                            {
+                                <tr class="itm">
+                                    <td class="">
+                                        <span class="badge badge-@badgeClass">@badgeText.ToUpper()</span>
+
+                                        <h5 style="margin-bottom:0;font-weight:normal;">
+                                            @frm.FormName @*&nbsp; <span class="text-gray">[ @frm.FormYear ]</span>*@
+                                        </h5>
+                                        <small class="text-black-50">
+                                            <span title="Date of termination" class="text-info">Terminates: @frmInDb.TerminalDate</span>&nbsp; &bull; &nbsp;
+                                            <span title="Last updated" class="text-info">Date: @item.FormDate(item.DateSubmitted)</span>
+                                        </small>
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="#" id="@frm.RecId" class="btn view @sClass mt-3 btn-sm" data-toggle="modal" data="@sts" data-entry="@item.EntryId" title="View this form">
+                                            <i class="fa fa-eye"></i>
+                                            @{
+                                                string _status = "";
+                                                if (sts.Trim().ToLower() == "") _status = "Fill"; else if (_revStats != null && _revStats != "" && _revStats.ToLower() != "pending" && _revStats.ToLower() != "approved" && _revStats.ToLower() != "submitted") _status = "Re-fill"; else if (sts.Trim().ToLower() == "saved") _status = "Edit"; else _status = "View";
+                                            }
+                                            @_status Entry
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts{
+    <script src="~/js/formeo.min.js" type="text/javascript"></script>
+    <script src="~/assets/js/CustomPrint.js" type="text/javascript"></script>
+
+    @*<script src="~/dist/formeo.min.js" type="text/javascript"></script>*@
+    <script type="text/javascript">
+        jQuery(function($) {
+
+            var mForm = $('#dvResponse');
+            var EntryId = "";
+
+            $(document).on('click', '.btn-add-input-group', function() {
+                var newel = $(this).closest('.formeo-row-wrap').find('.formeo-row:first').clone();
+                $(newel).insertBefore(this).find('input').val('');
+
+                function uuidv4() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                }
+
+                $(this).closest('.formeo-row-wrap').find('.formeo-row:last').each(function(a, b) {
+                    $(b).attr('id', uuidv4());
+                    $(b).append('<button type="button" class="delete-input-group mb-4" id=""><i class="fa fa-close text-danger"></i></i></button>');
+                    $(b).find('.delete-input-group').attr('id', uuidv4());
+                    $(b).find('.formeo-column').each(function(c, d) {
+                        $(d).attr('id', uuidv4());
+                        var inp = uuidv4();
+                        $(d).find('label').attr('for', inp);
+                        $(d).find('input').attr('id', inp);
+                        $(d).find('input').attr('name', inp);
+                        $(d).find('select').attr('name', inp);
+                        $(d).find('select').attr('id', inp);
+                        $(d).find('textarea').attr('id', inp);
+                        $(d).find('textarea').attr('name', inp);
+                        $(d).find('.f-field-group').each(function(e, f) {
+                            var inp = uuidv4();
+                            $(f).find('label').attr('for', inp);
+                            $(f).find('input').attr('id', inp);
+                            $(f).find('input').attr('name', inp);
+                            $(f).find('select').attr('name', inp);
+                            $(f).find('select').attr('id', inp);
+                            $(f).find('textarea').attr('id', inp);
+                            $(f).find('textarea').attr('name', inp);
+                            $(f).find('.f-field-group').each(function(g, h) {
+                                $(h).find('.f-radio').each(function(i, j) {
+                                    var inp = uuidv4();
+                                    $(j).find('input').attr('id', inp);
+                                    $(j).find('input').attr('name', inp);
+                                });
+                                $(h).find('.f-checkbox').each(function(k, l) {
+                                    var inp = uuidv4();
+                                    $(l).find('input').attr('id', inp);
+                                    $(l).find('input').attr('name', inp);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            $(document).on('mouseenter', '.delete-input-group', function() {
+                $(this).closest('.formeo-row').addClass('will-remove');
+            }).on('mouseleave', '.delete-input-group', function() {
+                $(this).closest('.formeo-row').removeClass('will-remove');
+            }).on('click', '.delete-input-group', function() {
+                $(this).parent('div').remove();
+            });
+
+
+            //$('#btnPrint').click(function () {
+            //    try {
+            //        $.ajax({
+            //            url: "/dist/formeo.min.css",
+            //            async: false,
+            //            success: function (data) {
+            //                var printscreen = window.open('', '', 'left=1,top=1,width=900,height=600,toolbar=0,scrollbars=0,status=0');
+            //                printscreen.document.write("<html><head>");
+            //                printscreen.document.write("<style> " + data + "</style>");
+            //                printscreen.document.write("</head><body>");
+            //                printscreen.document.write(mForm.html());
+            //                printscreen.document.close(); printscreen.focus(); printscreen.print(); printscreen.close();
+            //            },
+            //            error: function (data) {
+            //                alert('ERROR: Printing failed, please contact the system administrator');
+            //            }
+            //        });
+
+            //    } catch (e) {
+            //        alert(e);
+            //    }
+
+            //});
+
+            $('#btnPrint').click(function() {
+                try {
+                    mForm.printThis({
+                        importCSS: true,
+                    })
+                }
+                catch (e) {
+                    alert(e);
+                }
+            })
+
+            var formId = "";
+
+            //----------FETCHES THE SELECTED FORM FROM THE DATABASE---------//
+            $('#cRequest').change(function() {
+                //var cnt = $('#frm_' + $(this).val()).val();
+                showPreloaderInner();
+
+                var elem = $(this).siblings("i");
+                elem.removeClass("fa-file");
+                elem.addClass("fa-gear fa-2x fa-spin text-danger");
+                var check = $(this).find(":selected").val();
+                var frm = $(this).find(":selected").text();
+                formId = check;
+                try {
+                    $.ajax({
+                        url: "/Survey/Details",
+                        type: "Post",
+                        data: { "id": check },
+                        datatype: "json",
+                        success: function(response) {
+
+                            var postbtn = $('#btnSubmit');
+                            var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                            rendr.render(JSON.parse(response.formfields));
+
+                            $('#_formSet').val('<input type="hidden" name="FormId" value="' + check + '" />')
+                            hidePreloaderInner();
+
+                            $('#dvForm').slideDown('slow');
+                            var btn = document.querySelectorAll('.add-input-group');
+                            var buttons = $(btn);
+                            buttons.remove();
+                            $('.f-input-group-wrap .formeo-row:last-child').after('<button class="btn-add-input-group btn pull-right" id="" type="button" >Add +</button>');
+                            $('#dvResponse').removeClass('no-edit');
+                            postbtn.show();
+                            postbtn.attr("data-frm", frm);
+                            elem.attr("class", "");
+                            elem.attr("class", "fa fa-file fa-2x");
+                        },
+                        error: function(response) {
+                            alert("Rendering failed");
+                        }
+                    })
+                }
+                catch (e) {
+                    alert(e);
+                    hidePreloaderInner();
+
+                }
+
+
+            });
+
+
+            //var testdetails = $('div.testdetails');
+
+
+            //-----------DISPLAYS THE FORM DETAILS WITH THE PARTICULAR ENTRY-------------//
+            $('.itm a').click(function() {
+                formId = "";
+                showPreloaderInner();
+                var btnId = $(this).attr('data');
+                //formId = $('a.edit').attr('data-id');
+                var _id = $(this).attr('id');
+                $('div.type').removeClass("d-normal");
+                $('div.type').addClass("d-none");
+                var i = $(this).find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                try {
+                    var cnt = $(this).attr('data-html'), entr = $(this).attr('data-entry');
+
+                    if (entr == 0) {
+                        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                        rendr.render(JSON.parse(cnt));
+                        //mForm.append('<input type="hidden" name="FormId" value="' + $(this).attr('id') + '" />')
+                        $('#dvForm').slideDown('slow');
+                        $('#btnSave').show(); $('#dvResponse').removeClass('no-edit'); scrollTop(i);
+                        //formId = $(this).attr('data-entry');
+                    }
+                    else {
+                        var fId = $(this);
+                        $.ajax({
+                            url: "/Survey/TDetails",
+                            type: "POST",
+                            data: { "entry": entr, "id": _id },
+                            dataType: 'json',
+                            success: function(response) {
+                                //------------FILTERS FUNCTIONALITIES BY WHAT BUTTON IS CLICKED----------//
+                                //----------(VIEW OR EDIT)----------//
+
+
+                                if (btnId.toLowerCase() == "submitted" || btnId.toLowerCase() == "pending" || btnId.toLowerCase() == "re-filled") {
+                                    if (response.template != '') {
+                                        mForm.html(response.template);
+                                        $('#btnSave').hide(); $('#dvResponse').addClass('no-edit');
+                                        $('#btnSubmit').hide();
+                                        $('button.add-input-group').hide();
+                                        $('button.remove-input-group').hide();
+                                    }
+                                }
+                                else {
+                                    //---------IF EDIT? DISPLAYS THE FORMDETAILS TEMPLATE----------//
+                                    if (response.template != '') {
+                                        var dynamicFields = mForm.find('fieldset.f-input-group-wrap');
+                                        //mForm.append('<input type="hidden" name="FormId" value="' + formId + '" />');
+                                        mForm.html(response.template);
+
+                                        //------DISPLAYS THE FORM ADDING EDIT FUNCTIONALITIES------//
+                                        $('#dvForm').slideDown('slow');
+                                        $('#dvResponse').removeClass('no-edit'); scrollTop(i);
+                                        //mForm.html(response.template);
+                                        $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                                        $('#btnSubmit').show();
+                                        $('button.add-input-group').remove();
+                                        $('button.remove-input-group').text('');
+                                        $('button.remove-input-group').show();
+                                        $('.f-input-group-wrap .formeo-row:last-child').after('<button class="btn-add-input-group btn pull-right" id="" type="button" >Add +</button>');
+                                    }
+                                }
+
+                                if (btnId.toLowerCase() == "rejected")
+                                    btnId = "RE-FILLED";
+                                $('#Status').val(btnId);
+
+                                if (response.data != '') {
+                                    try {
+                                        //$.each(response.data, function (i, v) {
+                                        //    $('#render-form').find('#'+v.fieldName).val(v.response);
+                                        //});
+                                        $.each(response.data, function(i, v) {
+        @*  *@
+                                                    var input = $('#dvResponse').find('#' + v.fieldName);
+                                            console.log(v);
+                                            if (input.attr('type') != 'file') {
+                                                input.val(v.response);
+                                            }
+                                            //else if (v.response != "") {
+                                            //    input.before('<a href="../../uploads/' + v.response + '" ' + v.response + ' class="text-primary d-table-cell">Uploaded file Name is <b>' + v.response + '</b></a>');
+                                            //}
+                                        });
+                                        if (response._files != "") {
+
+
+                                            $.each(response._files, function(i, v) {
+
+                                                var input = $('#dvResponse').find('#' + v.fieldName);
+                                                console.log(v);
+                                                if (input.attr('type') != 'file') {
+                                                    input.val(v.response);
+                                                }
+                                                else if (v.response != "") {
+                                                    input.before('<a href="../../uploads/' + v.response + '" ' + v.response + ' class="text-primary file-link d-table-cell" target="blank">Uploaded file Name is <b>' + v.response + '</b></a>');
+                                                }
+                                            });
+                                        }
+                                    } catch (ex) { }
+                                }
+
+                                $('#dvForm').slideDown('slow'); scrollTop(i);
+                            },
+                            error: function(err) {
+                                $('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>'); scrollTop(i);
+                            }
+                        });
+                    }
+                    formId = _id;
+
+                    //$('#_formSet').val('<input type="hidden" id="entrId" name="EntryId" value="' + entr + '" />;<input type="hidden" name="FormId" value="' + formId + '" />');
+
+                    $('#entr').val(entr);
+                    $('#frmId').val(formId);
+
+                } catch (e) {
+                    alert(e); scrollTop(i);
+                }
+            });
+            function scrollTop(i) {
+                try {
+                    $("html, body").animate({ scrollTop: 0 }, 2500);
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+                hidePreloaderInner();
+                i.attr('class', 'fa fa-eye');
+            }
+
+
+            $('.btn-post').find('button').click(function(e) {
+
+                var check = $('#Status').val();
+
+                if (check == null || check == undefined || check == "") {
+                    check = $(this).attr('data-stats');
+                }
+                var frm = $(this).attr('data-frm');
+                var elem = $(this).children("i");
+                var id = $("#entr").val();
+                elem.removeClass("fa-paper-plane");
+                elem.addClass("fa-gear fa-spin text-white");
+                try {
+
+                    mForm.validate({
+                        focusInvalid: false,
+                        invalidHandler: function (form, validator) {
+
+                            if (!validator.numberOfInvalids())
+                                return;
+
+                            $('html, body').animate({
+                                scrollTop: $(validator.errorList[0].element).offset().top
+                            }, 200);
+                        }
+                    });
+
+                    if(!mForm.valid()){
+                        return;
+                    }
+
+                    if (confirm('Are you sure you are ready to submit form? Action is irreversable.')) {
+                        showPreloaderInner();
+                        var form_data = new FormData($('#dvResponse')[0]);
+
+                        if (frm !== "Enquiries and Complaints") {
+                            var input = $('input:file');
+                            if (input.length != 0) {
+                                //form_data = new FormData($('#dvResponse')[0])
+
+                                var file = input[0].files;
+                                form_data.append("File", file[0]);
+                            }
+                        }
+                        var arr = [];
+                        var json = {};
+                        var formDef = $('#dvResponse').html();
+                        var form = $('#dvResponse').serializeArray();
+                        $.each(form, function(i, field) {
+                            json[field.name] = field.value || '';
+                        });
+
+                        form_data.append("formdetails", formDef);
+                        form_data.append("EntryId", id);
+                        form_data.append("status", check);
+                        form_data.append("formId", formId);
+
+                        $.ajax({
+                            url: '/Survey/Others',
+                            type: 'post',
+                            contentType: false,
+                            processData: false,
+                            data: form_data,
+                            datatype: 'json',
+                            success: function(resp) {
+                                alert("saving was successful");
+                                window.location.reload();
+                            },
+                            error: function(resp) {
+                                alert("Saving failed!");
+                                elem.removeClass("fa-gear fa-spin text-white");
+                                elem.addClass("fa-paper-plane");
+                                hidePreloaderInner();
+                                //window.location.reload();
+                            }
+                        })
+                    }
+                }
+                catch (e) {
+                    alert(e);
+                    elem.removeClass("fa-gear fa-2x fa-spin text-danger");
+                    elem.addClass("fa-paper-plane");
+                    hidePreloaderInner();
+
+                }
+            });
+
+
+            $('.xit').click(function() { $('#dvForm').slideUp(); mForm.empty(); })
+            $('.ftypes').change(function() {
+                if ($(this).val() == 'All') {
+                    $('.itm').show('slow');
+                } else {
+                    $('.itm').hide();
+                    var cls = "_" + $(this).val().toLowerCase();
+                    $('.' + cls).show('slow');
+                }
+            });
+
+        });
+
+    </script>
+}

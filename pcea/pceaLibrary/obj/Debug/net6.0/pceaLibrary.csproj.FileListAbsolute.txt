@@ -1,0 +1,14 @@
+C:\Projects\pcea\pceaLibrary\bin\Debug\net6.0\pceaLibrary.deps.json
+C:\Projects\pcea\pceaLibrary\bin\Debug\net6.0\pceaLibrary.dll
+C:\Projects\pcea\pceaLibrary\bin\Debug\net6.0\pceaLibrary.pdb
+C:\Projects\pcea\pceaLibrary\bin\Debug\net6.0\_FrameworkCore.dll
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.csproj.AssemblyReference.cache
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.AssemblyInfoInputs.cache
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.AssemblyInfo.cs
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.csproj.CoreCompileInputs.cache
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibr.7652ABB2.Up2Date
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.dll
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\refint\pceaLibrary.dll
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\pceaLibrary.pdb
+C:\Projects\pcea\pceaLibrary\obj\Debug\net6.0\ref\pceaLibrary.dll

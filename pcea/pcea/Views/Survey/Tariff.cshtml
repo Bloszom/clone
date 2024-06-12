@@ -1,0 +1,890 @@
+﻿@model IEnumerable<FormsOperators>
+
+@section Css {
+    <link rel="stylesheet" href="~/dist/formeo.min.css" type="text/css" />
+    <style>
+        #dvForm {
+            display: none;
+        }
+
+        .lbl {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+
+        .no-edit {
+            pointer-events: none;
+        }
+    </style>
+}
+
+@{
+    ViewData["Title"] = "Tariff Request form";
+    Layout = "~/Views/Shared/_LayoutOperator.cshtml";
+    var badgeClass = "";
+    if (ViewBag.error != null || TempData["error"] != null)
+    {
+        string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+        <div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+    }
+    if (ViewBag.message != null || TempData["message"] != null)
+    {
+        string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+        <div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+    }
+
+    List<Forms> tarifForms = ViewBag.forms;
+    DateTime date = DateTime.Now;
+    //List<Forms> tarifFormList = tarifForms.Where(m => (m.TerminalDate.Month >= date.Month && m.TerminalDate.Day >= date.Day && m.TerminalDate.Year >= date.Year)).ToList();
+    List<Forms> tarifFormList = tarifForms.Where(m => m.TerminalDate.Ticks >= date.Ticks).ToList();
+    List<FormsAndEntry> frmAndEntr = ViewBag.frmandentr;
+}
+
+<div class="form-group">
+    <small><i class="fa fa-file"></i> Fill New Tarif Form </small>
+    <div class="form-inline">
+        @Html.DropDownList("tRequest", new SelectList(tarifFormList, "RecId", "FormName"), "Tarif Request Forms", new { @class = "form-control" })
+    </div>
+</div>
+<div class="clearfix"></div>
+
+@*<div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@ViewBag.successMsg</div>*@
+<div id="dvForm" class="border p-3 bg-white mb-2" style="position:relative;">
+
+    <button class="text-danger close right xit" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
+    <button id="btnPrint" type="button" data-toggle="modal" data-target="dvPrint" class="text-secondary close right mr-3" title="Print this form"><i class="fa fa-print"></i></button>
+
+    <div class="text-primary small">
+        <div class="row">
+            <div class="col-4">
+                <small class="lbl">Operator:</small> <strong class="text-uppercase">@ViewBag.operatorName</strong>
+                <br />
+                <small class="lbl">ID:</small> <strong id="opId" class="text-uppercase">@ViewBag.operatorID</strong>
+            </div>
+            <div class="type col-8 d-none row">
+                <div class="col-6 mb-2 nowrap">
+                    <small class="text-uppercase">NEW or UPGRADE?</small>
+                    <div class="input-group">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <i class="fa fa-file fa-custom-load"></i>
+                            </div>
+                        </div>
+
+                        <!--Dropdown for specification of entry type: selEntryType--->
+                        <select id="selEntryType" class="form-control form-control-sm" required style="font-size:12pt;padding-right:0px">
+                            <option selected>Select Entry Type</option>
+                            <option value="NEW">New Tariff</option>
+                            <option value="MODIFICATION">Modification of existing Tariff</option>
+                            <option value="REVALIDATION">Revalidation of Tariff Plan</option>
+                            <option value="PROMOTION">Renewal</option>
+                        </select>
+                        <!--/ selEntryType--->
+                    </div>
+                </div>
+
+                <!--Dropdown for specification which previous entry is to be linked with the present upgrade: selEntryMaster--->
+                <div class="entry col-6 d-none">
+                    <small class="text-uppercase">Previous Tariff Submissions</small>
+
+                    <select id="selEntryMaster" class="form-control form-control-sm " style="font-size:12pt">
+                        @*<option selected>Select Tariff Upgrade</option>*@
+                    </select>
+                </div>
+                <!--/ selEntryMaster--->
+            </div>
+        </div>
+    </div>
+
+    <div id="render-loader" class="_loader text-center" style="display: none">
+        <div class="text-center"><img src="~/img/loading.gif" /></div>
+    </div>
+    <form id="dvResponse" method="post" class="_body" enctype="multipart/form-data">
+        <h3 class="text-center m-5 text-info">Select from any of the listed forms &raquo;&raquo;</h3>
+    </form>
+    <div class="text-right form-group mt-3 pt-3 border-top">
+
+        <input type="hidden" name="FormDetails" id="FormDetails" value="" />
+        <input type="hidden" name="_formSet" id="_formSet" value="" />
+        <button id="btnSave" class="btn btn-primary btn-sm pull-left process" data-status="SAVED" type="button"><i class="fa fa-save"></i> Save and continue later</button>
+        <button id="btnSubmit" type="button" class="btn btn-success btn-sm process" data-status="SUBMITTED"><i class="fa fa-save"></i> Submit and send to NCC</button>
+    </div>
+    <span class="clearfix">&nbsp;</span>
+    @*Add Message*@
+
+    <div id="divMessages" style="display:none;">
+    </div>
+</div>
+
+@foreach (var itm in tarifForms)
+{
+    <input type="hidden" id="frm_@itm.RecId" name="frm_@itm.RecId" value="@itm.FormFields" />
+}
+<div class="table-responsive bg-white">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="border-top-0">
+                    <span class="text-dark text-uppercase">Previous Submissions</span>
+                </th>
+                <th class="border-top-0 text-right">
+                    <i class="fa fa-mouse-pointer"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+
+                @foreach (var item in Model)
+                {
+                    string stats = string.Empty;
+                    string badgeText = string.Empty;
+                    string Apptype = string.Empty;
+                    FormsAndEntry frmandentr = frmAndEntr.FirstOrDefault(x => x.EntryId == item.EntryId);
+
+                    var review = "";// frmandentr.ReviewStatus.ToLower().ToString();
+                    var _sAppType = "";// frmandentr.AppType.ToLower().ToString();
+                    if (frmandentr != null)
+                    {
+                        if (frmandentr.ReviewStatus != null)
+                            stats = frmandentr.ReviewStatus;
+                        Apptype = frmandentr.AppType;
+                    }
+
+                    var frmInDb = tarifForms.FirstOrDefault(f => f.RecId == item.FormId);
+                    var curdate = DateTime.Now;
+                    if (frmInDb != null)
+                    {
+
+                        if (!string.IsNullOrEmpty(stats))
+                        {
+                            string sClass = "btn-outline-primary";
+                            if (item.Status.ToLower() == "saved")
+                            {
+                                sClass = "btn-outline-info";
+                                badgeClass = "info";
+                                badgeText = "Unsubmitted";
+                            }
+                            if (stats.ToLower() == "rejected")
+                            {
+                                sClass = "btn-outline-danger";
+                                badgeClass = "danger";
+                                badgeText = stats;
+                            }
+                            if (item.Status.ToLower() == "rejected")
+                            {
+                                sClass = "btn-outline-danger";
+                                badgeClass = "danger";
+                                badgeText = item.Status;
+                            }
+                            if (item.Status.ToLower() == "submitted" && Apptype.ToLower() != "re-filled" && stats.ToLower() != "rejected")
+                            {
+                                sClass = "btn-outline-secondary";
+                                if (stats.ToLower() == "pending")
+                                {
+                                    badgeClass = "secondary";
+                                    badgeText = stats;
+                                }
+                                else if (stats.ToLower().Contains("sendtosec"))
+                                {
+                                    badgeClass = "secondary";
+                                    badgeText = "PENDING";
+                                }
+                                else
+                                {
+                                    badgeText = stats;
+                                    badgeClass = "success";
+                                }
+                            }
+
+                            @*                    if (item.Status.ToLower() == "saved" || stats == "rejected") sClass = "btn-outline-danger";
+            if (item.Status.ToLower() == "submitted" && Apptype.ToLower() != "re-filled" && stats.ToLower() != "rejected") sClass = "btn-outline-secondary";*@
+                            string sts = item != null ? item.Status.ToLower() : "";
+
+                            Forms frm = tarifForms.Find(x => x.RecId == item.FormId);
+                            if (frm != null && frmandentr.OldEntryId == null)
+                            {
+                                <tr class="itm">
+                                    <td class="">
+                                        <span class="badge badge-@badgeClass">@badgeText.ToUpper()</span>
+                                        <h5 style="margin-bottom:0;font-weight:normal;">
+                                            @frm.FormName &nbsp; <span class="text-gray">[ @frm.FormYear ]</span>
+                                        </h5>
+
+                                        <small class="text-black-50">
+                                            <span title="Last updated" class="text-info">Last updated: @item.FormDate(item.DateSubmitted) - </span>
+                                            <span title="Product Name" class="text-info">Product Name: @frmandentr.ProductName</span>
+                                        </small>
+                                    </td>
+                                    <td class="text-right">
+                                        <a href="#" id="@frm.RecId" class="frmBtn btn btn-sm mt-3 @sClass" data-toggle="modal" data-html="@frm.FormFields" data-status="@sts" data-masterid="@frmandentr.MasterEntryId" data-apptype="@frmandentr.AppType" data-reviewstats="@stats" data-entry="@item.EntryId" title="View/Edit this form">
+                                            <i class="fa fa-edit"></i>
+                                            @{
+                                                string _status = "";
+                                                if (sts.Trim().ToLower() == "saved" && stats != "rejected") _status = "Continue Filling"; else if (sts.Trim().ToLower() == "approved" && stats.ToLower() != "rejected") _status = "View"; else if (stats.ToLower() == "rejected" || sts.Trim().ToLower() == "submitted" || sts.Trim().ToLower() == "rejected") _status = "Re-fill";
+                                            }
+                                            @_status Entry
+
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="modal fade" id="modalAttention">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Attention</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div id="attentionBody" class="modal-body body text-center">
+            </div>
+            <div class="modal-footer">
+                <div id="taskManagerTrail" class="modal-body task-trail">
+                    <button class="btn btn-info" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Okay</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+
+    <script src="~/dist/formeo.min.js" type="text/javascript"></script>
+    <script src="~/assets/js/CustomPrint.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        var review = "";
+        var frmId = "";
+        var entryId = "";
+        var modal = $('#modalAttention');
+        var modalBody = $('#attentionBody');
+        var _seltars = $('div.entry');
+
+        function licensecat() {
+            //Check license category selection and display necssary instruction
+            console.log($('.licenseCat'));
+            $('.licenseCat').change(function () {
+
+                var selected = $(this).val();
+                if (selected == "Value Added Services") {
+
+                    modalBody.html("<h3> Please note that for <b>Value Added Service</b> licenses, you must provide the necessary documentations in the <b>fourth</b> section of the form or risk your submission being rejected. Click the okay button to continue filling the form.</h3>");
+                    modal.modal('show');
+                }
+            });
+        }
+
+        function DisplayBody() {
+            try {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:normal');
+            } catch (e) {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:none');
+            }
+        }
+
+        function DisplayLoader() {
+            try {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:normal');
+                $('._body').attr('style', 'display:none');
+            } catch (e) {
+                $('._loader').removeAttr('style');
+                $('._body').removeAttr('style');
+
+                $('._loader').attr('style', 'display:none');
+                $('._body').attr('style', 'display:none');
+            }
+        }
+
+        jQuery(function ($) {
+            var mForm = $('#dvResponse');
+
+            $('.frmBtn').click(function () {
+                var id = $(this).attr('data-entry');
+                var masterid = $(this).attr('data-masterid');
+                var apptype = $(this).attr('data-apptype');
+                entryId = id;
+
+
+                var selEntryType = $('#selEntryType');
+                selEntryType.children().remove();
+                $('<option value="' + apptype + '" selected>' + apptype + '</option>').appendTo(selEntryType);
+
+
+                var selTar = $('#selEntryMaster');
+                selTar.children().remove();
+                $('<option value="' + masterid + '" selected>' + masterid + '</option>').appendTo(selTar);
+            })
+
+
+            function hidden() {
+                var i = 1;
+                var dynSections = $(".f-input-group-wrap"),
+                    firstSection = $(".formeo-row-wrap").first();
+                for (var section of dynSections) {
+                    var check = firstSection.after().append('<input class="count" id="section_' + i + '" type="hidden" value="1" />');
+                    $(section).children(".formeo-row").attr('data-for', '#section_' + i);
+                    i++;
+                }
+            }
+
+
+            //$('#btnPrint').click(function () {
+            //    try {
+            //        $.ajax({
+            //            url: "/dist/formeo.min.css",
+            //            async: false,
+            //            success: function (data) {
+            //                var printscreen = window.open('', '', 'left=1,top=1,width=900,height=600,toolbar=0,scrollbars=0,status=0');
+            //                printscreen.document.write("<html><head>");
+            //                printscreen.document.write("<style> " + data + "</style>");
+            //                printscreen.document.write("</head><body>");
+            //                printscreen.document.write(mForm.html());
+            //                printscreen.document.close(); printscreen.focus(); printscreen.print(); printscreen.close();
+            //            },
+            //            error: function (data) {
+            //                alert('ERROR: Printing failed, please contact the system administrator');
+            //            }
+            //        });
+
+            //    } catch (e) {
+            //        alert(e);
+            //    }
+
+            //});
+
+            $('#btnPrint').click(function () {
+                try {
+                    mForm.printThis({
+                        importCSS: true,
+                    })
+                }
+                catch (e) {
+                    alert(e);
+                }
+            })
+
+
+
+            //Populates the previous entry dropdown if the entry type is an upgrade entry
+            $('#selEntryType').change(function () {
+                try {
+
+                    var check = $(this).find(":selected").val();
+                    var operator = $('#opId').text();
+                    var selTar = $('#selEntryMaster');
+                    //var _seltars = $('div.entry');
+                    //var _options;
+                    if (check == "MODIFICATION") {
+                        modalBody.html("<h3> Please note that for modifications and renewals, you must provide an evidence of payment with your submission in the third section of the form or risk your submission being rejected. Click the okay button to continue filling the form.</h3>");
+                        modal.modal('show');
+
+                        var fa = $(this).parent().find('i');
+                        fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                        $.ajax({
+                            url: "/Survey/ListPrevForms",
+                            type: "Get",
+                            data: { "operatorid": operator, "id": frmId },
+                            dataType: "json",
+                            success: function (data) {
+                                _seltars.removeClass('d-none');
+                                _seltars.addClass('d-normal');
+                                selTar.children().remove();
+                                $('<option value="">Select an existing Tariff</option>').appendTo(selTar);
+                                $.each($(data), function (key, value) {
+                                    $('<option value="' + value.value + '">' + value.text + '</option>').appendTo(selTar);
+                                });
+                                fa.attr('class', 'fa fa-file');
+                            },
+                            error: function (data) {
+                                alert(JSON.stringify(data));
+                                _seltars.removeClass('d-normal');
+                                _seltars.addClass('d-none');
+                            }
+                        })
+                    } else if (check == "REVALIDATION") {
+
+                        var fa = $(this).parent().find('i');
+                        fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                        $.ajax({
+                            url: "/Survey/ListPrevForms",
+                            type: "Get",
+                            data: { "operatorid": operator, "id": frmId },
+                            dataType: "json",
+                            success: function (data) {
+                                _seltars.removeClass('d-none');
+                                _seltars.addClass('d-normal');
+                                selTar.children().remove();
+                                $('<option value="">Select an existing Tariff</option>').appendTo(selTar);
+                                $.each($(data), function (key, value) {
+                                    $('<option value="' + value.value + '">' + value.text + '</option>').appendTo(selTar);
+                                });
+                                fa.attr('class', 'fa fa-file');
+                            },
+                            error: function (data) {
+                                alert(JSON.stringify(data));
+                                _seltars.removeClass('d-normal');
+                                _seltars.addClass('d-none');
+                            }
+                        })
+                    } else if (check == 'PROMOTION') {
+                        modalBody.html("<h3> Please note that for modifications and renewals, you must provide an evidence of payment with your submission in the third section of the form or risk your submission being rejected. Click the okay button to continue filling the form.</h3>");
+                        modal.modal('show');
+
+                        _seltars.removeClass('d-normal');
+                        _seltars.addClass('d-none');
+
+                    } else {
+                        _seltars.removeClass('d-normal');
+                        _seltars.addClass('d-none');
+                    }
+                }
+                catch (e) {
+
+                }
+            });
+
+
+
+            //Load the selected tariff request into a new form for an upgrade
+            $('#selEntryMaster').change(function () {
+                try {
+                    showPreloaderInner();
+
+                    var entryId = $(this).find(":selected").val();
+                    //alert(entryId);
+                    if (entryId != '') {
+                        //DisplayLoader();
+                        $.ajax({
+                            url: "/Survey/SDetails",
+                            type: "POST",
+                            data: { "entry": entryId },
+                            dataType: 'json',
+                            success: function (response) {
+                                DisplayBody();
+                                if (response.template != '') {
+                                    mForm.html(response.template);
+                                    $('#btnReset').show(); $('#btnSave').show(); $('#btnSubmit').show(); $('#dvResponse').removeClass('no-edit');
+                                } else {
+                                    var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                                    rendr.render(JSON.parse(cnt));
+                                    $('#btnReset').hide(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit'); $('#btnSubmit').show();
+                                }
+
+                                var formId = $('#tRequest').val()
+                                $('#_formSet').val('<input type="hidden" name="FormId" value="' + formId + '" />')
+                                if (response.data != '') {
+                                    try {
+                                        $.each(response.data, function (i, v) {
+                                            $('#dvResponse').find('#' + v.fieldName + '[type="file"]').siblings('br').remove();
+                                            $('#dvResponse').find('#' + v.fieldName + ':not([type="file"])').val(v.response);
+                                        });
+                                    } catch (ex) { }
+                                }
+
+                                var check = $('#selEntryType').find(":selected").val();
+
+                                if (check == "REVALIDATION") {
+                                    $('#btnReset').hide(); $('#btnSave').hide(); $('#btnSubmit').show(); $('#dvResponse').addClass('no-edit'); $('.remove-input-group').hide(); $(':button.add-input-group').hide();
+                                } else {
+                                    $('#btnReset').show(); $('#btnSave').show(); $('#btnSubmit').show(); $('#dvResponse').removeClass('no-edit'); $('.remove-input-group').show(); $(':button.add-input-group').show();
+                                }
+
+                                hidePreloaderInner();
+                                $('#dvForm').slideDown('slow');
+                                //scrollTop(i);
+                                $(".add-input-group").addClass("addd-input-group");
+                            },
+                            error: function (err) {
+                                DisplayBody();
+                                $('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>'); scrollTop(i);
+                                hidePreloaderInner();
+                            }
+                        });
+                    }
+                    else {
+                        alert("Invalid selection");
+                        hidePreloaderInner();
+                    }
+                }
+                catch (e) {
+                    hidePreloaderInner();
+                }
+            });
+
+            $('#tRequest').change(function () {
+                //showPreloaderInner();
+
+
+                var selTar = $('#selEntryMaster');
+                var selEntryType = $('#selEntryType');
+                selTar.children().remove();
+                selEntryType.children().remove();
+                $('<option selected>Select Entry Type</option>').appendTo(selEntryType);
+                $('<option value="NEW">New Tariff</option>').appendTo(selEntryType);
+                $('<option value="MODIFICATION">Modification of existing Tariff</option>').appendTo(selEntryType);
+                $('<option value="REVALIDATION">Revalidation of Tariff Plan</option>').appendTo(selEntryType);
+                $('<option value="PROMOTION">Renewal</option>').appendTo(selEntryType);
+
+
+                //hideDd();
+
+
+                $('div.type').removeClass("d-none");
+                $('div.type').addClass("d-normal");
+
+                frmId = $(this).val();
+
+                var cnt = $('#frm_' + $(this).val()).val();
+                var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                rendr.render(JSON.parse(cnt));
+                $('#_formSet').val('<input type="hidden" name="FormId" value="' + $(this).val() + '" />')
+                //hidePreloaderInner();
+                $('#dvForm').slideDown('slow');
+                $('#btnSave').show();
+                $('#btnSubmit').show();
+                $('#dvResponse').removeClass('no-edit');
+        @* scrollTop(i); *@
+                    DynamicFunc();
+                licensecat()
+            });
+
+            function DynamicFunc() {
+                $('button.add-input-group').remove();
+                $('button.remove-input-group').remove();
+                $('.f-input-group-wrap .formeo-row:last-child').after('<button class="addd-input-group btn pull-right" id="cloneRow" type="button" >Add +</button>');
+                hidden();
+            }
+
+            $('.itm a').click(function () {
+                showPreloaderInner();
+
+                $('div.type').removeClass("d-normal");
+                $('div.type').addClass("d-none");
+                var i = $(this).find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                try {
+                    var cnt = $(this).attr('data-html'), entr = $(this).attr('data-entry'); var id = $(this).attr('id');
+                    if (entr == 0) {
+                        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                        rendr.render(JSON.parse(cnt));
+                        $('#dvForm').slideDown('slow');
+                        $('#btnSave').show();
+                        $('#btnSubmit').show();
+                        $('#dvResponse').removeClass('no-edit'); scrollTop(i);
+                    }
+                    else {
+                        var fId = $(this);
+                        review = fId.attr('name');
+                        $.ajax({
+                            url: "/Survey/TDetails",
+                            type: "POST",
+                            data: { "entry": $(this).attr('data-entry') },
+                            dataType: 'json',
+                            success: function (response) {
+                                try {
+                                    var stats = fId.attr('data-status'),
+                                        reviewstats = fId.attr('data-reviewstats');
+                                    console.log(response);
+
+                                    if (response.template != '') {
+                                        mForm.html(response.template);
+                                        if (response.data != '' && stats === 'pending') {
+                                            $('#btnReset').show(); $('#btnSave').show(); $('#btnSubmit').show(); $('#dvResponse').removeClass('no-edit');
+                                        }
+                                        else if (response.data !== '' && reviewstats.toLowerCase() === 'rejected') {
+                                            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                                            $('#btnSubmit').show();
+
+                                            review = fId.attr('data-reviewstats');
+                                            document.getElementById("btnSubmit").setAttribute("name", review);
+                                            //$('#btnSubmit').attr('name', review);
+                                        }
+                                        else if (response.data !== '' && fId.attr('data-status') === 'saved') {
+                                            $('#btnReset').show(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit');
+                                            $('#btnSubmit').show();
+
+                                        }
+                                        else if (response.data !== '' && fId.attr('data-status') === 'approved') {
+                                            $('#btnReset').hide(); $('#btnSave').hide(); $('#btnSubmit').hide(); $('#dvResponse').addClass('no-edit'); $('.remove-input-group').hide(); $(':button.addd-input-group').hide();
+                                        }
+                                    } else {
+                                        //console.log("NAWA OOO");
+                                        var rendr = new FormeoRenderer({ renderContainer: '#dvResponse' });
+                                        rendr.render(JSON.parse(cnt));
+                                        $('#btnReset').hide(); $('#btnSave').show(); $('#dvResponse').removeClass('no-edit'); $('#btnSubmit').show();
+                                        $('add-input-group').replaceWith('<button class="addd-input-group">Add</button>');
+                                    }
+
+                                }
+                                catch (err) {
+                                    console.log(err);
+                                }
+
+                                if (response.data != '') {
+                                    try {
+                                        $.each(response.data, function (i, v) {
+                                            $.each(response.data, function (i, v) {
+                                                $('#dvResponse').find('#' + v.fieldName).val(v.response);
+                                            });
+                                        })
+                                        if (response._files != "") {
+
+
+                                            $.each(response._files, function (i, v) {
+
+                                                var input = $('#dvResponse').find('#' + v.fieldName);
+                                                console.log(v);
+                                                if (input.attr('type') != 'file') {
+                                                    input.val(v.response);
+                                                }
+                                                else if (v.response != "") {
+                                                    input.before('<a href="../../uploads/' + v.response + '" ' + v.response + ' class="text-primary d-table-cell" target="blank">Uploaded file Name is <b>' + v.response + '</b></a>');
+                                                }
+                                            });
+                                        }
+
+
+                                    } catch (ex) { }
+                                }
+
+                                $('#dvForm').slideDown('slow');
+                                scrollTop(i);
+                                //$(".add-input-group").addClass("addd-input-group");
+                                //$(".addd-input-group").removeClass("add-input-group");
+                            },
+                            error: function (err) {
+                                $('#dvForm').html('<h2 class="text-center">ERROR: ' + err + '</h2>'); scrollTop(i);
+                            }
+                        });
+                    }
+
+                    $('#_formSet').val('<input type="hidden" name="EntryId" value="' + entr + '" /><input type="hidden" name="FormId" value="' + id + '" />');
+                    console.log($('#_formSet'));
+                    //Load Msg
+
+                    $.ajax({
+                        url: "/Survey/LoadMessages",
+                        type: 'GET',
+                        data: { "entryId": entr },
+                        dataType: 'json',
+                        error: function (err) {
+                            if (err.status === 200 && err.responseText !== '') {
+                                $("#divMessages").attr('style', 'display:normal');
+                                $("#divMessages").html(err.responseText);
+                            }
+                            else {
+                                $("#divMessages").attr('style', 'display:none');
+                            }
+                        }
+                    });
+
+                } catch (e) {
+                    alert(e); scrollTop(i);
+                }
+            });
+
+            function hideDd() {
+                var check = _seltars.hasClass("d-normal");
+
+                //check if the master entry dropdown is shown
+                if (check) {
+                    _seltars = $('div.entry');
+                    $('#selEntryType').val('NEW');
+                    _seltars.addClass('d-none');
+                }
+            }
+
+            function scrollTop(i) {
+                try {
+                    $("html, body").animate({ scrollTop: 0 }, 2500);
+                    hideDd();
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+                hidePreloaderInner();
+                i.attr('class', 'fa fa-edit');
+            }
+
+
+            $('.process').click(function () {
+                try {
+                    var confirmed = "";
+                    var sAppType = $("#selEntryType").val();
+                    var sMasterEntryId = $("#selEntryMaster").val();
+
+                    var status = $(this).data('status');
+                    var Reviewstatus = $(this).attr('name');
+                    var productName = $(".product-name").val();
+                    var productConcept = $(".product-concept").val();
+                    if (status == "SAVED") {
+                        confirmed = "Are you sure you are ready to save this form and come back to it later ? ";
+                    } else {
+                        confirmed = "Are you sure you are ready to submit form? Action is irreversable.";
+                    }
+
+                    if (confirm(confirmed)) {
+                        mForm.validate({
+                            focusInvalid: false,
+                            invalidHandler: function (form, validator) {
+
+                                if (!validator.numberOfInvalids())
+                                    return;
+
+                                $('html, body').animate({
+                                    scrollTop: $(validator.errorList[0].element).offset().top
+                                }, 200);
+
+                            }
+                        });
+
+                        if(!mForm.valid()){
+                            return;
+                        }
+                        showPreloader();
+
+                        $(this).html('<i class="fa fa-gear fa-spin"></i>');
+
+                        var labelValuePair = $('.formeo-stage .f-field-group').map(function (el) {
+                            var label = $(this).find('label, h4').text();
+                            var value = $(this).find(':input').val();
+                            var arr = [{ name: label, value: value }];
+                            var res = Object.fromEntries(arr.map(arr => Object.values(arr)));
+                            return res;
+                        }).get();
+
+                        var labelPair = $('.formeo-stage .f-field-group').map(function (el) {
+                            var label = $(this).find('label, h4').text();
+                            return { label: label };
+                        }).get();
+
+                        var arr = [];
+                        $.each(labelPair, function (i, v) {
+                            if (arr.includes(v['label']) === false && v['label'] != "") {
+                                arr.push(v['label']);
+                            }
+                        });
+
+                        var encLabelValue = encodeURIComponent(JSON.stringify(labelValuePair));
+                        var encLabel = encodeURIComponent(JSON.stringify(arr));
+
+                        //
+                        $('#FormDetails').val(mForm.html());
+                        mForm.append($('#FormDetails'));
+                        mForm.append($('#_formSet').val());
+                        if (Reviewstatus != undefined)
+                            mForm.append(`<input type="hidden" name="reviewstatus" value="${Reviewstatus}" id="reviewStatus" />`);
+
+                        mForm.append(`<input type="hidden" name="Status" value="${status}" id="Status" />`);
+                        mForm.append(`<input type="hidden" name="AppType" value="${sAppType}" id="AppType" />`);
+                        mForm.append(`<input type="hidden" name="MasterEntryId" value="${sMasterEntryId}" id="MasterEntryId" />`);
+                        mForm.append(`<input type="hidden" name="productName" value="${productName}" id="productName" />`);
+                        mForm.append(`<input type="hidden" name="productConcept" value="${productConcept}" id="productConcept" />`);
+                        mForm.append(`<input type="hidden" name="labelValue" value="${encLabelValue}" id="labelValue" />`);
+                        mForm.append(`<input type="hidden" name="labels" value="${encLabel}" id="labels" />`);
+                        mForm.submit();
+                    }
+                }
+                catch (e) {
+                    alert(e);
+                }
+            });
+
+
+            $(document).on('click', '.addd-input-group', function () {
+                var newel = $(this).closest('.formeo-row-wrap').find('.formeo-row:first').clone();
+                $(newel).insertBefore(this).find('input,textarea').val('');
+                $(newel).find('a').remove();
+                function uuidv4() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                }
+
+                $(this).closest('.formeo-row-wrap').find('.formeo-row:last').each(function (a, b) {
+                    $(b).attr('id', uuidv4());
+                    $(b).append(`<button type="button" class="remove-input-group" id="">remove</button>`);
+                    $(b).find('.remove-input-group').attr('id', uuidv4());
+                    $(b).find('.formeo-column').each(function (c, d) {
+                        $(d).attr('id', uuidv4());
+                        var inp = uuidv4();
+                        $(d).find('label').attr('for', inp);
+                        $(d).find('input').attr('id', inp);
+                        $(d).find('input').attr('name', inp);
+                        //$(d).find('input[type=file]').attr('class', 'file-' + index);
+                        $(d).find('select').attr('name', inp);
+                        $(d).find('select').attr('id', inp);
+                        $(d).find('textarea').attr('id', inp);
+                        $(d).find('textarea').attr('name', inp);
+                        $(d).find('.f-field-group').each(function (e, f) {
+                            var inp = uuidv4();
+                            $(f).find('label').attr('for', inp);
+                            $(f).find('input').attr('id', inp);
+                            $(f).find('input').attr('name', inp);
+                            $(f).find('select').attr('name', inp);
+                            $(f).find('select').attr('id', inp);
+                            $(f).find('textarea').attr('id', inp);
+                            $(f).find('textarea').attr('name', inp);
+                            $(f).find('.f-field-group').each(function (g, h) {
+                                $(h).find('.f-radio').each(function (i, j) {
+                                    var inp = uuidv4();
+                                    $(j).find('input').attr('id', inp);
+                                    $(j).find('input').attr('name', inp);
+                                });
+                                $(h).find('.f-checkbox').each(function (k, l) {
+                                    var inp = uuidv4();
+                                    $(l).find('input').attr('id', inp);
+                                    $(l).find('input').attr('name', inp);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+            $(document).on('mouseenter', '.remove-input-group', function () {
+                $(this).closest('.formeo-row').addClass('will-remove');
+            }).on('mouseleave', '.remove-input-group', function () {
+                $(this).closest('.formeo-row').removeClass('will-remove');
+            }).on('click', '.remove-input-group', function () {
+                $(this).parent('div').remove();
+            });
+
+            $('.xit').click(function () { $('#dvForm').slideUp(); mForm.empty(); })
+            $('.ftypes').change(function () {
+                if ($(this).val() == 'All') {
+                    $('.itm').show('slow');
+                } else {
+                    $('.itm').hide();
+                    var cls = "_" + $(this).val().toLowerCase();
+                    $('.' + cls).show('slow');
+                }
+            });
+
+        });
+
+    </script>
+}

@@ -1,0 +1,44 @@
+﻿@model IEnumerable<pcea.Models.TariffAnalysis>
+
+
+<table class="table table-borderless table-striped table-hover">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.FieldName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ParameterId)
+            </th>
+            <th style="width:20%">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr class="nowrap">
+            <td>
+                @Html.DisplayFor(modelItem => item.FieldName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ParameterId)
+            </td>
+            <td>
+                <a href="javascript: DeleteMatchedParameter('@item.RecId');" class="btn btn-outline-danger btn-sm" title="Delete this row" onclick="return confirm('Are you sure you want to delete this parameter (@item.ParameterId)?')">
+                    <i class="fa fa-trash"></i>
+                </a>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+@section scripts{
+
+    <script>
+
+    </script>
+
+
+}

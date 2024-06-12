@@ -1,0 +1,62 @@
+﻿@model IEnumerable<pcea.Models.Memo>
+
+@{
+    ViewData["Title"] = "List of Memos";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@if (TempData["message"] != null)
+{
+    <div class="text-center small w-75 m-auto bg-success text-white p-2">@TempData["message"]</div>
+}
+@if (TempData["error"] != null)
+{
+    <div class="text-center small w-75 m-auto bg-danger text-white p-2">@TempData["error"]</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="px-0 bg-transparent border-top-0">
+                    <span class="text-dark"><i class="fa fa-file"></i> MEMOS</span>
+                </th>
+                <th class="px-0 bg-transparent border-top-0 text-right">
+                    <a asp-action="Build" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus"></i> Add New Memo
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="px-0">
+                            <h5 style="margin-bottom:0;font-weight:normal;">
+                                @item.MemoName
+                            </h5>
+                            <small class="text-black-50">
+                                <span title="date created" class="text-info">created: @item.FormDate(item.DateCreated)</span>
+                            </small>
+                        </td>
+                        <td class="px-0 text-right">
+                            <a href="@Url.ActionLink("Build")/@item.RecId" class="btn btn-outline-primary btn-sm" title="View/Edit this form"><i class="fa fa-edit"></i></a>
+@*                            <a href="@Url.ActionLink("Delete")/@item.RecId" class="btn btn-outline-danger btn-sm" title="Delete this form" onclick="return confirm('Are you sure you want to delete this form (@item.MemoName)?')"><i class="fa fa-trash"></i></a>
+                            <a href="@Url.ActionLink("Duplicate")/@item.RecId" class="btn btn-outline-info btn-sm" title="Duplicate this form"><i class="fa fa-copy"></i></a>*@
+
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+

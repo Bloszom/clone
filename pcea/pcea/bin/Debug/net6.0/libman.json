@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultProvider": "jsdelivr",
+  "libraries": [
+    {
+      "library": "formeo@1.4.0",
+      "destination": "wwwroot/",
+      "files": [
+        "dist/formeo.min.css",
+        "dist/formeo.min.js"
+      ]
+    }
+  ]
+}

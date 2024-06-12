@@ -1,0 +1,38 @@
+[
+  {
+    "outputFileName": "wwwroot/assets/style.min.css",
+    "inputFiles": [
+    ],
+    "minify": {
+      "enabled": true
+    },
+    "sourceMap": false
+  },
+  {
+    "outputFileName": "wwwroot/assets/style_extras.min.css",
+    "inputFiles": [
+    ],
+    "minify": {
+      "enabled": true
+    },
+    "sourceMap": true
+  },
+  {
+    "outputFileName": "wwwroot/assets/script.min.js",
+    "inputFiles": [
+    ],
+    "minify": {
+      "enabled": true
+    },
+    "sourceMap": true
+  },
+  {
+    "outputFileName": "wwwroot/assets/script_extras.min.js",
+    "inputFiles": [
+    ],
+    "minify": {
+      "enabled": true
+    },
+    "sourceMap": true
+  }
+]

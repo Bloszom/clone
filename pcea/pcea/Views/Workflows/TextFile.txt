@@ -1,0 +1,211 @@
+﻿        function newTask() {
+            try {
+
+                //var sProcessId = $('#hfdProcessId').val();
+                //var sTaskId;// = $('#hfdTaskId').val();
+
+                $('#newTask').modal('show');
+                return;
+                //check if TASK already exists before setting the stage for new TASK
+                var pageUrl = $(location).attr("href");
+                $.ajax({
+                    cache: false,
+                    type: 'GET',
+                    url: '/Workflows/GetTaskInformation',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: 'json',
+                    data: { "sActionUrl": pageUrl, "sProcessId": sProcessId },
+                    success: function (response) {
+                        var obj = JSON.parse(response);
+                        for (var i = 0; i < obj.length; i++) {
+                            if (obj[i]['DateAssigned'] != null) {
+                                alert("A task has been previously opened for this URL in the workflow.  Please, use the COMMIT button to log your finished work.");
+                                $('#newTask').modal('hide');
+                                return;
+                            }
+                            else {
+                                sTaskId = obj[i]['TaskId']
+                                $('#txtProcessId').val(sProcessId);
+                                $('#txtTaskId').val(sTaskId);
+                                $('#txtActionUrl').val(pageUrl);
+                                break;
+                            }
+                        }
+                    },
+                    failure: function (response) {
+                        alert('Error initializing Task. \n' + response);
+                        $('#newTask').modal('hide');
+                        return;
+                    },
+                    error: function (response) {
+                        alert('Error initializing Task. \n' + response);
+                        $('#newTask').modal('hide');
+                        return;
+                    }
+                });
+
+                //get WORKFLOW_ACTION
+                $.ajax({
+                    cache: false,
+                    type: 'GET',
+                    url: '/Workflows/GetWorkflowAction',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: 'json',
+                    data: {},
+                    success: function (response) {
+                        var obj = JSON.parse(response);
+                        var toAppend = '<option>Select the action carried out by you</option>';
+                        for (var i = 0; i < obj.length; i++) {
+                            toAppend += '<option>' + obj[i]['ReferenceId'] + '</option>';
+                        }
+                        $('#ddlAction').children().remove().end();
+                        $('#ddlAction').append(toAppend);
+                        $('#new-task-form').removeAttr("style");
+                        $('#render-new-task').attr("style", "display:none");
+                    },
+                    failure: function (response) {
+                        alert(response);
+                        $('#newTask').modal('hide');
+                    },
+                    error: function (response) {
+                        alert(response);
+                        $('#newTask').modal('hide');
+                    }
+                });
+
+                //get ESCALATE TO and ASSIGN TO user list based on workflow configuration
+
+            } catch (e) {
+                alert(e);
+            }
+        }
+
+        function commitTask() {
+            try {
+                var sDestUser = $('#ddlDestUser').val();
+                var workflowMgt = {
+                    ProcessId: $('#txtProcessId').val(),
+                    TaskId: $('#txtTaskId').val(),
+                    TaskType: $('#txtTaskType').val(),
+                    ReferenceNo: $('#txtReferenceNo').val(),
+                    OperatorName: $('#txtOperatorName').val(),
+                    ActionId: $('#ddlAction').val(),
+                    ActionUrl: $('#txtActionUrl').val(),
+                    UserId: "",
+                    RoleId: "",
+                    Remarks: $('#txtRemarks').val(),
+                    CompletionFlag: "YES",
+                    DateAssigned: $('#txtDateAssigned').val()
+                };
+                //JSON.stringify(workflowMgt)
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("CommitTask", "Workflows")',
+                    contentType: "application/json",
+                    data: { "WorkflowManager": workflowMgt, "DestUserId": sDestUser },
+                    success: function (response) {
+                        alert(response);
+                    },
+                    failure: function (response) {
+                        alert(response);
+                    },
+                    error: function (response) {
+                        alert(response);
+                    }
+                });
+            } catch (e) {
+                alert(e);
+            }
+        }
+
+        function pendingTasks() {
+            try {
+                var cnt = $(this).attr('data-content');
+                $.ajax({
+                    url: "/Workflows/NewTask",
+                    type: "GET",
+                    data: { "entry": $(this).attr('id') },
+                    dataType: 'json',
+                    //contentType: 'application/json; charset=UTF-8',
+                    success: function (response) {
+                        var rendr = new FormeoRenderer({ renderContainer: '#render-new-task' });
+                        rendr.render(JSON.parse(cnt));
+                        //fill form
+                        if (response != '') {
+                            $.each(response, function (i, v) {
+                                $('#render-new-task').find('#' + v.fieldName).val(v.response);
+                            });
+                        }
+                        $('#render-new-task :button').hide();
+                    },
+                    error: function (err) {
+                        alert(err);
+                        $('#render-new-task').html('<h2>ERROR: ' + err + '</h2>');
+                    }
+                });
+            } catch (e) {
+                alert(e);
+            }
+        }
+
+        function initializeWorkflow() {
+            try {
+                //get list of WORKFLOW PROCESSES for current user
+                var sRoleId = $("#hfdRoleId").val();
+                var sProcessId = $('#hfdProcessId').val();
+                var sNewProcessId = '';
+                if (sRoleId == '') {
+                    alert("Fatal Error: Unable to get your Role profile.  Try login again or contact System Admin.");
+                    //logOut();
+                    return;
+                }
+                $.ajax({
+                    cache: false,
+                    type: 'GET',
+                    url: '/Workflows/GetProcessList',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: 'json',
+                    data: { "sRoleId": sRoleId },
+                    success: function (response) {
+                        var obj = JSON.parse(response);
+                        var toAppend;
+                        for (var i = 0; i < obj.length; i++) {
+                            toAppend += '<option>' + obj[i]['ProcessId'] + '</option>';
+                            if (sNewProcessId == '') sNewProcessId = obj[i]['ProcessId'];
+                        }
+                        $('#ddlWorkflowGroup').children().remove().end();
+                        $('#ddlWorkflowGroup').append(toAppend);
+                        if (sProcessId == '') {
+                            $('#hfdProcessId').val(sNewProcessId);
+                            $('#ddlWorkflowGroup').val(sNewProcessId);
+                        }
+                        else {
+                            $('#hfdProcessId').val(sProcessId);
+                            $('#ddlWorkflowGroup').val(sProcessId);
+                        }
+                    },
+                    failure: function (response) {
+                        alert(response);
+                        logOut();
+                    },
+                    error: function (response) {
+                        alert(response);
+                        logOut();
+                    }
+                });
+
+                //set status of NEW or COMMIT button for the Workflow Manager
+                var sTaskId = $('#hfdTaskId').val();
+                if (sTaskId == '') {
+                    $("#btnNewTask").show();
+                    $("#btnCommitTask").hide();
+                }
+                else {
+                    $("#btnNewTask").hide();
+                    $("#btnCommitTask").show();
+                }
+            } catch (e) {
+                alert(e);
+            }
+        }
+        */

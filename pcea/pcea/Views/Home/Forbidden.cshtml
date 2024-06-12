@@ -1,0 +1,67 @@
+﻿
+@{
+    Layout = null;
+    ViewBag.Title = "Login";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Economic Analysis &amp; Tariff Management System</title>
+    <meta name="description" content="Economic Analysis and Tariff Management System">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="~/assets/css/fontastic.css">
+    <link rel="stylesheet" href="~/assets/fontisto/fontisto.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" href="~/assets/css/grasp_mobile_progress_circle-1.0.0.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.css">
+    <link rel="stylesheet" href="~/assets/css/style.blue.premium.css" id="theme-stylesheet">
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="stylesheet" href="~/assets/vendor/ladda/ladda-themeless.min.css">
+    <link rel="shortcut icon" href="~/assets/img/favicon.ico">
+</head>
+<body>
+    <div class="mt-30px pt-5">
+        <!-- Counts Section -->
+        <section class="dashboard-counts section-padding">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="text-center w-100">
+                        <h1 class="text-secondary" style="font-size:290px">403</h1>
+                        <span class="text-bold w-100 mt-n4" style="font-size:23px">forbidden</span>
+                        <label>@ViewData["accesserrormsg"]</label>
+                        <label class="text-bold mt-2" style="font-size:30px">Access to the resource was denied...</label>
+                        <label class="text-bold mt-2 w-100" style="font-size:23px">
+                            This might be because this action is not within your role or priviledge rights.
+                           <br/> <span class="text-center text-bold">OR</span><br/>
+                            Your session might have expired. <a href="~/Home/LogOut" class="text-underline">Click here to logout.</a>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Header Section-->
+        <section class="dashboard-counts text-center section-padding">
+            <a href="~/Home/Dashboard" class="btn btn-outline-primary">Back to safety</a>
+        </section>
+    </div>
+    <!-- JavaScript files-->
+    <script src="~/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/grasp_mobile_progress_circle-1.0.0.min.js"></script>
+    <script src="~/assets/vendor/jquery.cookie/jquery.cookie.js"></script>
+    <script src="~/assets/vendor/chart.js/Chart.min.js"></script>
+    <script src="~/assets/vendor/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
+
+    <script src="~/assets/vendor/ladda/spin.min.js"></script>
+    <script src="~/assets/vendor/ladda/ladda.min.js"></script>
+    <script src="~/assets/js/components-ladda.js"></script>
+    <!-- Main File-->
+    <script src="~/assets/js/front.js"></script>
+</body>
+</html>
+

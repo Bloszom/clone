@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewData["Title"] - Economic Analysis &amp; Tariff Management System</title>
+    <meta name="description" content="Economic Analysis and Tariff Management System">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="~/assets/preloader.css" />
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" href="~/assets/css/grasp_mobile_progress_circle-1.0.0.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.css">
+    <link rel="stylesheet" href="~/assets/css/style.blue.premium.css" id="theme-stylesheet">
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="shortcut icon" href="~/assets/img/favicon.ico">
+    <link rel="stylesheet" href="~/assets/vendor/ladda/ladda-themeless.min.css">
+
+    <style>
+        .spinner-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #115587;
+            z-index: 999999;
+        }
+        
+        .spinner-wrapper-inner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.2);
+            z-index: 999999;
+        }
+    </style>
+    @RenderSection("Css", required: false)
+</head>
+<body>
+    <!--CSS Spinner-->
+    <div class="spinner-wrapper">
+        <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+    <!--CSS Spinner/-->
+
+  <!--CSS inner Spinner-->
+    <div class="spinner-wrapper-inner d-none">
+        <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+    <!--CSS inner Spinner/-->
+
+    <header class="header">
+        <nav class="navbar navbar-blue">
+            <div class="container-fluid">
+                <div class="navbar-holder d-flex align-items-center justify-content-between">
+                    <div class="navbar-header ">
+                        <!-- <a id="toggle-btn" href="#" class="menu-btn"><i class="icon-bars"> </i></a> -->
+                        <a href="http://ncc.gov.ng" target="_blank" class="navbar-brand">
+                            <div class="brand-text d-none d-md-inline-block align-middle">
+                                <span style="background-color:white">
+                                    <img src="~/assets/img/ncclogo.svg" style="height:40px;" />
+                                </span>
+                                <span>Economic Analysis &amp; Tariff Administration</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <ul class="nav nav-menu align-baseline list-unstyled d-flex flex-md-row align-items-md-center">
+                        <!-- User Profile Details-->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-style="zoom-in" data-target="#userDetails">
+                                <img src="~/img/avatar.png" style="width:40px; height:40px;" class="img-fluid rounded-circle" alt="User Image">
+                                <span class="hidden-xs">@TempData["FullName"]</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="divider"></a>
+                        </li>
+                        <!-- NCC Apps-->
+                        @{
+                            string sMasterRedirect = TempData["SsoAppHost"].ToString();
+                            string[] sAppName = TempData["SSOAppNames"].ToString().Split('|');
+                            string[] sAppHost = TempData["SSOAppHosts"].ToString().Split('|');
+                            string[] sAppId = TempData["SSOAppIds"].ToString().Split('|');
+
+                            //construct menu for Apps Dashboard and This App
+                            for (int i = 0; i < sAppName.Length; i++)
+                            {
+                                string sName = sAppName[i];
+                                string sHost = sAppHost[i];
+                                string sId = sAppId[i];
+                                //string sDashboard = " Dashboard";
+                                if ((sAppName[i].ToLower().IndexOf("economic") < 0) && sAppName[i].ToLower().IndexOf("tariff") < 0)
+                                {
+                                    //the link is for other Apps
+                                    if (sAppId[i].ToLower() == "default")
+                                    {
+                                            @*//this is the SSO App link
+                        <li class="nav-item">
+                            <a href="@sMasterRedirect@sHost;" class="nav-link">
+                                <span class="d-none d-sm-inline-block">@sName@sDashboard</span>
+                            </a>
+                        </li>*@
+                                    }
+                                }
+                                else
+                                {
+                                    //its a link to this app. set href to # and highlight the name
+                                        <li class="nav-item" style="background-color:white;" id="liCurrentApp">
+                                            <a href="#" class="nav-link">
+                                                <span class="d-none d-sm-inline-block text-primary">@sName</span>
+                                            </a>
+                                        </li>
+                                }
+                            }
+
+                            //construct dropdown menu for other Apps
+                                <li class="nav-item dropdown">
+                                    <a id="languages" rel="nofollow" data-target="#" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link language dropdown-toggle">
+                                        <span class="d-none d-sm-inline-block">Other Apps</span>
+                                    </a>
+                                    <ul aria-labelledby="languages" class="dropdown-menu">
+                                        @{
+                                        for (int i = 0; i < sAppName.Length; i++)
+                                        {
+                                            string sName = sAppName[i];
+                                            string sHost = sAppHost[i];
+                                            string sId = sAppId[i];
+                                            if ((sAppName[i].ToLower().IndexOf("economic") < 0) && sAppName[i].ToLower().IndexOf("tariff") < 0)
+                                            {
+                                                //the link is for other Apps
+                                                if (sAppId[i].ToLower() != "default")
+                                                {
+                                                    //this is other Apps
+                                                            <li>
+                                                                <a rel="nofollow" href="@sMasterRedirect@sHost" class="dropdown-item">
+                                                                    <span>@sName</span>
+                                                                </a>
+                                                            </li>
+                                                }
+                                            }
+                                        }
+                                        }
+                                    </ul>
+                                </li>
+                        }
+
+                        <!-- Log out-->
+                        <li class="nav-item">
+                            <a asp-controller="Home" asp-action="LogOut" class="nav-link">
+                                <span class="d-none d-sm-inline-block"><i class="fa fa-lock text-danger"></i> Sign Out</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div style="margin-left:5%; margin-right:5%">
+        <!-- Breadcrumb-->
+        <div class="breadcrumb-holder">
+            <div class="container-fluid">
+                <partial name="_MenuOperator" />
+            </div>
+        </div>
+        <section class="page-relative">
+            <div class="container-fluid">
+                <!-- Page Header-->
+                <header class="pb-0">
+                    <h3 class="display">@ViewData["Title"]</h3><br />
+                    <div>
+                        @if (@ViewBag.ErrorMessage != null)
+                        {
+                            <p class="text-danger text-center">@ViewBag.ErrorMessage</p>
+                        }
+                        @if (@ViewBag.SuccessMessage != null)
+                        {
+                            <p class="text-success text-center">@ViewBag.SuccessMessage</p>
+                        }
+                    </div>
+                </header>
+                @RenderBody()
+            </div>
+        </section>
+    </div>
+
+    <footer class="main-footer footer-relative">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-6">
+                    <p>Nigerian Communications Commission &copy; @DateTime.Now.Year</p>
+                </div>
+                <div class="col-sm-6 text-right">
+                    <p>Version 1.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal fade" id="userDetails" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">User Details</h4>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+                <div id="render-user" class="modal-body">
+                    <div class="text-center">
+                        <img src="~/img/avatar.png" style="width:40px; height:40px;" class="img-fluid rounded-circle" alt="User Image"><br />
+                        <span class="text-bold">@TempData["FullName"]</span><br />
+                        <span>@TempData["OperatorName"]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/grasp_mobile_progress_circle-1.0.0.min.js"></script>
+    <script src="~/assets/vendor/jquery.cookie/jquery.cookie.js"></script>
+    <script src="~/assets/vendor/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
+    <!-- Notifications-->
+    <script src="~/assets/vendor/messenger-hubspot/build/js/messenger.min.js"></script>
+    <script src="~/assets/vendor/messenger-hubspot/build/js/messenger-theme-flat.js"></script>
+    <script src="~/assets/js/home-premium.js"></script>
+    <!-- Main File-->
+    <script src="~/assets/js/front.js"></script>
+
+    <script>
+        //$(document).ready(function () {
+            //Preloader
+            var preloader = $('.spinner-wrapper');
+            var preloaderinner = $('.spinner-wrapper-inner');
+
+            preloaderFadeOutTime = 2000;
+            function hidePreloader() {
+                preloader.fadeOut(preloaderFadeOutTime);
+            }
+            hidePreloader();
+
+            function showPreloader() {
+                preloader.fadeIn(preloaderFadeOutTime - 1000);
+            }
+            
+            function hidePreloaderInner() {
+                preloaderinner.fadeOut(preloaderFadeOutTime);
+            }
+            hidePreloaderInner();
+
+            function showPreloaderInner() {
+
+                preloaderinner.removeClass("d-none");
+                preloaderinner.fadeIn(preloaderFadeOutTime - 500);
+            }
+
+            $('#opr_menu li a').removeClass('active');
+            var ac = '/@(ViewContext.RouteData.Values["Controller"])'+('@(ViewContext.RouteData.Values["Action"])' == "Index" ? '' : '/@(ViewContext.RouteData.Values["Action"])');
+            $('#opr_menu li a[href="' + ac + '"]').addClass("active");
+        //});
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

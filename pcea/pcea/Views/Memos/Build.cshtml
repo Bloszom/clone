@@ -1,0 +1,96 @@
+﻿@model pcea.Models.Memo
+
+@section Css {
+<link rel="stylesheet" href="~/assets/summernote/summernote-bs4.css" type="text/css" />
+}
+
+@{
+    ViewData["Title"] = "Memo Builder";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<form asp-action="Build">
+    <a asp-action="Index" class="btn btn-sm btn-default"><i class="fa fa-angle-double-left"></i> Return to memo list</a>
+        <input type="hidden" asp-for="RecId" />
+    <div class="row mt-2">
+        <div class="col-md-12 form-group form-group-sm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        </div>
+
+@*        <div class="col-md-2 form-group form-group-sm">
+            <label asp-for="MemoName" class="control-label"></label>
+        </div>*@
+        <div class="col-md-12 form-group form-group-sm">
+           <label asp-for="MemoName" class="control-label"></label>
+            <input asp-for="MemoName" class="form-control form-control-sm" />
+            <div class="input-group-append"><span asp-validation-for="MemoName" class="text-danger"></span></div>
+        </div>
+
+
+        <div class="col-md-1 form-group form-group-sm">
+            <label asp-for="ProcessId" class="control-label">Process</label>
+        </div>
+        <div class="col-md-5 form-group form-group-sm">
+            @if (Model.ProcessId == null)
+            {
+                <select asp-for="ProcessId" asp-items="Model.ProcessList" class = "form-control form-control-sm">
+                </select>
+            }
+            else
+            {
+                <select asp-for="ProcessId" asp-items="Model.ProcessList" class = "form-control form-control-sm">
+                </select>
+            }
+            <div class="input-group-append"><span asp-validation-for="ProcessId" class="text-danger"></span></div>
+        </div>
+
+
+        <div class="col-md-1 form-group form-group-sm">
+            <label asp-for="DateCreated" class="control-label"></label>
+        </div>
+        <div class="col-md-3 form-group form-group-sm">
+@*            <label asp-for="DateCreated" class="control-label">Date Created</label>
+*@            <input asp-for="DateCreated" class="form-control form-control-sm" />
+            <div class="input-group-append"><span asp-validation-for="DateCreated" class="text-danger"></span></div>
+        </div>
+
+        <div class="col-md-2 form-group form-group-sm form-check">
+            <label class="form-check-label">
+                <input class="form-check-input pull-right" asp-for="Published" /> @Html.DisplayNameFor(model => model.Published)
+            </label>
+        </div>
+
+        @*        <div class="col-md-1 form-group form-group-sm">
+            <label asp-for="TaskId" class="control-label"></label>
+            </div>
+            <div class="col-md-5 form-group form-group-sm">
+            <input asp-for="TaskId" class="form-control form-control-sm" readonly="readonly" />
+            <span asp-validation-for="TaskId" class="text-danger"></span>
+            </div>*@
+        <div class="col-md-12 form-group form-group-sm">
+            <label asp-for="MemoContent" class="control-label"></label>
+            <textarea asp-for="MemoContent" class="summernote"></textarea>
+            <span asp-validation-for="MemoContent" class="text-danger"></span>
+        </div>
+        <div class="col-md-12 form-group form-group-sm">
+            <input type="submit" value="Save Memo" class="btn btn-primary pull-right" />
+        </div>
+    </div>
+</form>
+
+
+
+@section Scripts {
+<script src="~/assets/summernote/summernote-bs4.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(function () {
+        $('.summernote').summernote({
+            height: 500
+        });
+    });
+</script>
+
+    @{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}

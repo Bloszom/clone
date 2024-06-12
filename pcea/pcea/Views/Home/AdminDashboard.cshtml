@@ -1,0 +1,218 @@
+﻿@*@model IEnumerable<ReportOperatorEntry>*@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+
+<style>
+    .spinner-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #115587;
+        z-index: 999999;
+    }
+</style>
+
+<section class="dashboard-counts">
+    <!-- Count item widget-->
+    @*<div class="col-xl-3 col-md-4 col-6" style="left:360px; position:absolute">
+            <div class="wrapper count-title d-flex">
+                <div class="icon"><i class="fi fi-calculator"></i></div>
+                <div class="name">
+                    <strong class="text-uppercase text-nowrap">My Workflow</strong><span>Last 6 days</span>
+                    <div class="count-number">10</div>
+                </div>
+            </div>
+        </div>*@
+    <div class="row">
+        <!-- Count item widget-->
+        <div class="col-lg-6 col-sm-12">
+            <div class="wrapper count-title d-flex">
+                <div class="icon"><i class="fi fi-stack-overflow"></i></div>
+                <div class="name">
+                    <strong class="text-uppercase text-nowrap">Questionnaires</strong><span>For the Year @DateTime.Now.Year</span>
+                    <div class="count-number qcount"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Count item widget-->
+        <div class="col-lg-6 col-sm-12">
+            <div class="wrapper count-title d-flex">
+                <div class="icon"><i class="fi fi-commenting"></i></div>
+                <div class="name">
+                    <strong class="text-uppercase text-nowrap">Tariff Requests</strong><span>For the Year @DateTime.Now.Year</span>
+                    <div class="count-number tcount"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<section>
+    <div class="row">
+        <div class="col-lg-6 col-sm-12">
+            <div class="card bar-chart-example">
+                <div class="card-header d-flex align-items-center">
+                    <h4>Survey/Questionnaire</h4>
+                </div>
+                <div class=" text-center">
+                    <div class="spinner-border text-gray loader1 position-absolute mt-4 mr-5 ml-n5" style="width: 5rem; height: 5rem;" role="progressbar">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="chart-container ">
+                        <canvas class="" id="barChartExample"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-sm-12">
+            <div class="card pie-chart-example">
+                <div class="card-header d-flex align-items-center">
+                    <h4>Tariff Request</h4>
+                </div>
+                <div class=" text-center">
+                    <div class="spinner-border text-gray loader1 position-absolute mt-4 mr-5 ml-n5" style="width: 5rem; height: 5rem;" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <div class="chart-container ">
+                        <img class="loader2 d-none position-absolute" src="~/img/loading2.gif" />
+                        <canvas class="" id="pieChartExample"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+@section scripts{
+    <script src="~/assets/vendor/chart.js/Chart.min.js"></script>
+    <!--<script src="~/lib/jquery/dist/jquery.min.js"></script>-->
+
+    <script>
+        $(document).ready(function () {
+            try {
+                //Assigns the base varirables
+                var brandPrimary = 'rgba(51, 179, 90, 1)';
+
+                var PIECHARTEXMPLE = $('#pieChartExample'),
+                    BARCHARTEXMPLE = $('#barChartExample');
+
+                var Qloader = $('.loader1');
+                var Tloader = $('.loader2');
+                var qCount = $('.qcount');
+                var tCount = $('.tcount');
+                var postback = '/Home/GetCharts';
+                var arrTar = [];
+
+
+                //The function that generates random colors, used to give each bar chart label a distinct color
+                function random_rgba() {
+                    var o = Math.round, r = Math.random, s = 255;
+                    return 'rgba(' + o(r() * s) + ',' + o(r() * s) + ',' + o(r() * s) + ',' + r().toFixed(1) + ')';
+                }
+
+                //ajax call action to fetch db data
+                $.ajax({
+                    url: postback,
+                    type: 'post',
+                    datatype: 'json',
+                    success: function (response) {
+                        //
+                        //Gets a summation of all Tariff submissions into a variable
+                        var tarCount = response.tarAccept + response.tarReject + response.tarPend;
+
+                        //Places the total submissions on each form types in the count div
+                        qCount.html(response.surCount);
+                        tCount.html(tarCount);
+
+                        //Adds the data to the array to populate the PIECHART
+                        arrTar.push(response.tarAccept);
+                        arrTar.push(response.tarPend);
+                        arrTar.push(response.tarReject);
+
+                        //Initalizing the PIECHART and populate it with the dynamically created array
+                        var pieChartExample = new Chart(PIECHARTEXMPLE, {
+                            type: 'doughnut',
+                            data: {
+                                labels: [
+                                    "Approved",
+                                    "Pending",
+                                    "Rejected"
+                                ],
+                                datasets: [
+                                    {
+                                        data: arrTar,
+                                        borderWidth: [1, 1, 1],
+                                        backgroundColor: [
+                                            brandPrimary,
+                                            "rgba(75,192,192,1)",
+                                            "#FFCE56"
+                                        ],
+                                        hoverBackgroundColor: [
+                                            brandPrimary,
+                                            "rgba(75,192,192,1)",
+                                            "#FFCE56"
+                                        ]
+                                    }
+                                ]
+                            }
+                        });
+
+                        var pieChartExample = {
+                            responsive: true
+                        };
+
+
+                        //Initializes the array used to group setup the BARCHART dataset
+                        let arrBackColor = [];
+                        let arrBorColor = [];
+                        let dataset = {};
+                        let _datasets = [];
+
+                        //Creates bar colors for each form type category
+                        var Backcolor = "rgba(0, 78, 200, 0.6)";
+                        //Creates dynamic colors for each legend label
+                        for (let a = 0; a < response.surForms.length; a++) {
+                            //var Borcolor = random_rgba();
+                            arrBackColor.push(Backcolor);
+                            //arrBorColor.push(Borcolor);
+                        };
+
+
+
+                        dataset = { "label": "Total Submissions", "backgroundColor": arrBackColor, "borderColor": arrBorColor, "borderWidth": 1, "data": response.surveyData }
+                        _datasets.push(dataset);
+
+
+                        //Initializes the BARCHART and populates it with data
+                        var barChartExample = new Chart(BARCHARTEXMPLE, {
+                            type: 'bar',
+                            data: {
+                                labels: response.surForms,
+                                datasets: _datasets
+                            }
+                        });
+
+                        //Kills the chart loaders
+                        Tloader.addClass('d-none');
+                        Qloader.addClass('d-none');
+                    },
+                    error: function (response) {
+                        //Kills the chart loaders
+                        Tloader.addClass('d-none');
+                        Qloader.addClass('d-none');
+                    }
+                })
+            }
+            catch (e) {
+            }
+        })
+    </script>
+}

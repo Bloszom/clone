@@ -1,0 +1,50 @@
+﻿@model pcea.Models.Workflow
+
+
+    <div class="row">
+        <dl>
+            <dt>
+                @Html.DisplayNameFor(model => model.ProcessId)
+            </dt>
+            <dd>
+                @Html.DisplayFor(model => model.ProcessName)
+            </dd>
+            <dd>
+                @Html.DropDownListFor(m => m.ProcessId, new SelectList(Model.Status), new { @class = "form-control form-control-sm", @id = "status" })
+            </dd>
+        </dl>
+    </div>
+        @*<div class="col-md-4">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="ProcessId" />
+                    <div class="form-group">
+                        <label asp-for="ProcessName" class="control-label"></label>
+                        <input asp-for="ProcessName" class="form-control" />
+                        <span asp-validation-for="ProcessName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DateCreated" class="control-label"></label>
+                        <input asp-for="DateCreated" class="form-control" />
+                        <span asp-validation-for="DateCreated" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Status" class="control-label"></label>
+                        <input asp-for="Status" class="form-control" />
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Save" class="btn btn-primary" />
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <a asp-action="Index">Back to List</a>
+        </div>*@
+
+        @section Scripts {
+            @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+        }
+

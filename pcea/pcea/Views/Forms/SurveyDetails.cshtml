@@ -1,0 +1,236 @@
+﻿
+@{
+    //ViewData["Title"] = ViewBag.title + "(" + ViewBag.OperatorId + ")";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Css{
+    <link rel="stylesheet" href="~/dist/formeo.min.css" type="text/css" />
+    <style>
+        #render-form {
+            pointer-events: none;
+        }
+
+        /*{
+            pointer-events: all;
+        }*/
+
+        .card {
+            margin-bottom: 2px !important;
+        }
+
+        .btn-link {
+            text-decoration: none !important;
+            font-weight: bold;
+        }
+       
+        .error{
+            color:red;
+        }
+
+    </style>
+}
+
+
+
+@*<div id="accordion">
+    <div class="card">
+        <div class="card-header" style=" background-color:#E9ECEF" id="headingThree">
+            <h5 class="mb-0">
+                @if (ViewBag.MasterEntryId == null)
+                {
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Click here to preview submitted Tariff
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-link collapsed pull-left" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Click here to preview submitted Tariff
+                    </button>
+                    <a href="~/Forms/ViewTariff/@ViewBag.MasterEntryId" class="text-danger text-small pull-right" target="_blank"> Click here to see @ViewBag.MasterEntryName</a>
+                }
+            </h5>
+        </div>*@
+        @*<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">*@
+<a href="~/Workflows/TaskList" class="text-danger"><i class="fa fa-angle-double-left"></i> Go Back</a>
+<div class="card">
+    <div class="w-100 pt-3">
+        <button id="btnPrint" type="button" data-toggle="modal" data-target="dvPrint" class="text-secondary btn btn-link close pull-right mr-3" title="Print this form"><i class="fa fa-2x fa-print"></i></button>
+
+    </div>
+    <div id="form-loader" class="form-loader">
+        <div class="text-center"><img src="~/img/loading.gif" /></div>
+    </div>
+    <div id="render-form" class="modal-body">
+
+    </div>
+    @*<div class="w-100 pt-3 border-top">
+        <h4 align="center">Official Use Only</h4>
+        <div class="form-group">
+            <small>Remarks/Comment</small>
+            <textarea class="form-control" id="remark" name="remark" data-rule-validRemark="true" required></textarea>
+            <div id="remError"></div>
+        </div>
+        <div class="pull-right">
+            <input type="hidden" id="Status" name="Status" value="" />
+            <input type="hidden" id="Entry" name="Entry" value="" />
+            <button class="btn btn-primary btn-sm process" data-datac="APPROVED" type="button"><i class="fa fa-check"></i> Approve</button>
+            <button class="btn btn-danger btn-sm process pull-left " data-datac="REJECTED" type="button"><i class="fa fa-ban"></i> Decline</button>
+            <br />
+        </div>
+    </div>*@
+    
+</div>
+        @*</div>*@
+    @*</div>*@
+@*</div>*@
+
+@section Scripts{
+
+    <script src="~/dist/formeo.min.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+        $('#btnPrint').click(function() {
+            try {
+                $('#render-form').printThis({
+                    importCSS: true,
+                })
+            }
+            catch (e) {
+                alert(e);
+            }
+        })
+
+        function DisplayForm() {
+            try {
+                $('.form-loader').removeAttr('style');
+                $('.modal-body').removeAttr('style');
+
+                $('.form-loader').attr('style', 'display:none');
+                $('.modal-body').attr('style', 'display:normal');
+            } catch (e) {
+            }
+        }
+        Array.prototype.contains = function (elem) {
+            for (i in this) {
+                if ($(this[i]).prop('tagName') == elem) return true;
+            }
+            return false;
+        }
+        function DisplayFormLoader() {
+            try {
+                $('.form-loader').removeAttr('style');
+                $('.modal-body').removeAttr('style');
+
+                $('.form-loader').attr('style', 'display:normal');
+                $('.modal-body').attr('style', 'display:none');
+            } catch (e) {
+            }
+        }
+
+        function details() {
+            try {
+                var url = window.location.pathname;
+                var id = url.substring(url.lastIndexOf('/') + 1);
+                DisplayFormLoader();
+                $.ajax({
+                    url: "/Forms/SurveyDetails",
+                    type: "POST",
+                    data: { "entry": id },
+                    dataType: 'json',
+                    //contentType: 'application/json; charset=UTF-8',
+                    success: function (response) {
+                        if (response.template != '') {
+                            $(".loader").attr('style', 'none');
+                            $('#render-form').html(response.template);
+                            //console.log(response.template);
+                        } else {
+                            var rendr = new FormeoRenderer({ renderContainer: '#render-form' });
+                            rendr.render(JSON.parse(cnt));
+                        }
+
+                        //fill form
+                        if (response.data != '') {
+                            $.each(response.data, function (i, v) {
+                                $('#render-form').find('#' + v.fieldName).val(v.response);
+                            });
+                        }
+
+                        //highlight changed values
+                        if (response.changeddata != '') {
+                            $.each(response.changeddata, function (i, v) {
+                                $('#render-form').find('#' + v.fieldName).addClass("text-danger");
+                            });
+                        }
+                        $('#render-form :button').hide();
+                        DisplayForm();
+                    },
+                    error: function (err) {
+                        alert(err);
+                        $('#render-form').html('<h2>ERROR: ' + err + '</h2>');
+                        DisplayForm();
+                    }
+                });
+            } catch (e) {
+                alert(e);
+                DisplayForm();
+            }
+        };
+
+        details();
+
+        $('.process').click(function () {
+            var remark = $('#remark').val();
+            var status = $(this).data('datac');
+
+            $("#Status").val(status);
+            openTaskManager();
+                //$("#modalTaskManager").modal("show");
+        });
+
+        $(".eval").on('click', function (e) {
+           
+            var url = window.location.pathname;
+            var id = url.substring(url.lastIndexOf('/') + 1);
+
+            var formData = new FormData();
+            var file = $("#evalFile")[0].files;
+            var remark = $('#evalRemark').val();
+
+            formData.append("file", file[0]);
+            formData.append("evaluationRemarks", remark);
+            formData.append("entryId", id);
+
+            if ($.trim(remark) == "") {
+                $("#evalError").html("<p style='color:red'>This field is Required</p>")
+                $("#evalError").addClass("error");
+            } else if ($("#evalFile").val() == "") {
+                $("#evalFileError").html("<p  style='color:red;'>This field is Required</p>")
+                $("#evalFileError").addClass("error");
+            }
+            else {
+                var i = $(this).find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                $.ajax({
+                    url: "/Forms/PostRemark",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+
+                }).done(function () {
+                    alert("Evaluation submitted successfully!");
+                    i.attr('class', 'fa fa-save');
+                }).fail(function () {
+                    alert("There was and unexpected error while processing your request!");
+                    i.attr('class', 'fa fa-save');
+                });
+            }
+        });
+
+    </script>
+
+}

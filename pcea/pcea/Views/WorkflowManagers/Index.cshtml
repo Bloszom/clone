@@ -1,0 +1,108 @@
+﻿@model IEnumerable<pcea.Models.WorkflowManager>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProcessId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReferenceNo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OperatorName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateAssigned)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ActionId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ActionUrl)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UserId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RoleId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Remarks)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateCompleted)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CompletionFlag)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProcessId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ReferenceNo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OperatorName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateAssigned)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ActionId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ActionUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UserId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RoleId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Remarks)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateCompleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CompletionFlag)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.RecId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.RecId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.RecId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,66 @@
+﻿@model pcea.Models.Workflow
+
+
+    <dl class="row">
+
+        <dt class="col-sm-4">
+            @Html.DisplayNameFor(model => model.ProcessName)
+        </dt>
+        <dd class="col-sm-8">
+            @Html.TextBoxFor(model => model.ProcessName, new { @class = "form-control", @placeholder = "Enter Process Name", @id = "processid" })
+        </dd>
+        <dt class="col-sm-4">
+            @Html.LabelFor(x => Model.Status, new { @class = "control-label" })
+            @*@Html.DisplayNameFor(model => model.Status)*@
+        </dt>
+        <dd class="col-sm-8">
+            @Html.DropDownList("Status", new SelectList(Enum.GetValues(typeof(Status))), new { @class = "form-control", @id = "stats" })
+        </dd>
+    </dl>
+
+<div class="row">
+    <div class="col-md-12 ladda-progress-demo">
+        <input type="submit" value="Save" class="btn btn-lg btn-block btn-outline-primary ladda-button" id="NewProcess" />
+    </div>
+</div>
+
+
+<script>
+    //-------------POST Status Changes----------------------
+    $(function () {
+        $("#NewProcess").click(function () {
+            var workflow = new Object();
+            workflow.Status = $("#stats").val();
+            workflow.ProcessName = $('#processid').val();
+            if (workflow != null) {
+                $.ajax({
+                    type: "GET",
+                    url: "/WorkFlows/NewProcess",
+                    data: { "sStatus": workflow.Status, "sProcessid": workflow.ProcessName },
+                    dataType: "json",
+                    success: function (response) {
+                        $('#ModalWorkflow').modal('hide');
+                        //window.location.reload();
+                        alert(response + "Record edited Successfully");
+                    },
+                    failure: function (response) {
+                        
+                        alert(response.statusText);
+                    },
+                    error: function (response) {
+                        
+                        if (response.status == 200) {
+                            $('.message').val("New workflow created...")
+                            $('#ModalWorkflow').modal('hide');
+
+                            window.location.reload();
+                        }
+                        else {
+                            alert(response.statusText + " " + "Invalid Input " + response.status);
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>

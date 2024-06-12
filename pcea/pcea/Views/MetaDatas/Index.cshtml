@@ -1,0 +1,195 @@
+﻿@model IEnumerable<pcea.Models.MetaData>
+
+@{
+    ViewData["Title"] = "Dynamic Fields";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="table-responsive table-responsive-sm">
+            <table class="table table-bordered table-striped table-hover table-sm text-nowrap" id="indexDataTable">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.MetaDataType)
+                        </th>
+                        <th style="width:10%">Action</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.MetaDataType)
+                            </td>
+                            <td>
+                                <a href="javascript: listRef('@item.MetaDataType');" id="listrefs"  class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <br />
+        </div>
+    </div>
+    
+    <div class="col-lg-7" id="divRef" style="border-color:cornflowerblue; border-left-style:solid; border-width:thin">
+        <div class="text-center">
+            <img class="loader" style="display:none" src="~/img/loading.gif" />
+        </div>
+        <div class="table-responsive" id="divRefContent">
+
+        </div><!-- /.card-body -->
+    </div>
+</div>
+
+@*Modal for reference Add New and Edit*@
+<div class="modal fade" id="RefModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <label class="modal-title">Dynamic Fields</label>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="RefModalContent">
+                <div class="text-center">
+                    <img class="refloader" style="display:none" src="~/img/loading.gif" />
+                </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+@*Modal for reference Add New and Edit*@
+<div class="modal fade" id="RefModalNew">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <label class="modal-title">Dynamic Fields</label>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="RefModalContentNew">
+                <div class="text-center">
+                    <img class="refloader" style="display:none" src="~/img/loading.gif" />
+                </div>
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+@section scripts
+{
+
+    <script>
+        
+        //----------------------LOAD REFERENCES---------------------------
+        function listRef(metadatatype) {
+            //$('#listrefs').on('click', function () {
+            Ladda.stopAll();
+            //
+            $('#divRefContent').attr('style', 'display:none');
+                var btn = $('#listrefs.bg-primary');
+                btn.removeClass('bg-primary');
+                btn.addClass('btn-outline-primary');
+
+            var click = document.activeElement;
+            console.log(click);
+            var $btn = $(click);
+            $btn.removeClass('btn-outline-primary');
+            $btn.addClass('bg-primary');
+
+                $('.loader').removeAttr('style');
+                $('.loader').attr('style', 'display:normal');
+                var PostBackURL = '/MetaDatas/GetReferences';
+                $.ajax({
+                    type: "GET",
+                    url: PostBackURL,
+                    contentType: "application/json; charset=utf-8",
+                    data: { "MetaDataType": metadatatype },
+                    datatype: "json",
+                    success: function (data) {
+                        $('.loader').removeAttr('style');
+                        $('.loader').attr('style', 'display:none');
+
+                        $('#divRefContent').removeAttr('style');
+                        $('#divRefContent').attr('style', 'display:normal');
+
+                        $('#divRefContent').html(data);
+                        $('#divref div:visible').html();
+
+                    },
+                    error: function () {
+                        alert("Unable to retrieve field values.  Please, try again.");
+                    }
+                });
+
+            //});
+            
+        }
+
+        //----------------------GET POPUP FOR REF EDIT---------------------------
+        function fieldRef(refid) {
+            var PostBackURL = '/MetaDatas/ShowModalEdit';
+            $('.refloader').removeAttr('style');
+            $('.refloader').attr('style', 'display:normal');
+            $('#RefModal').modal('show');
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "RecId": refid },
+                datatype: "json",
+                success: function (data) {
+                    $('#RefModalContent').html(data);
+
+                },
+                error: function () {
+                    alert("Unable to retrieve field values.  Please, try again.");
+                }
+            });
+        }
+
+        //----------------------GET POPUP FOR REF ADDNEW---------------------------
+        function RefNew(metaType) {
+            var PostBackURL = '/MetaDatas/ShowModalRefNew';
+            $('.refloader').removeAttr('style');
+            $('.refloader').attr('style', 'display:normal');
+            $('#RefModalNew').modal('show');
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "metaType": metaType },
+                datatype: "json",
+                success: function (data) {
+                    $('#RefModalContentNew').html(data);
+
+                },
+                error: function () {
+                    alert("Unable to retrieve field values.  Please, try again.");
+                }
+            });
+        }
+
+    </script>
+}

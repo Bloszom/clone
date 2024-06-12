@@ -1,0 +1,54 @@
+﻿@model pcea.Models.FormsMessage;
+
+@{
+    Layout = null;
+}
+
+<div class="chatDiv p-2">
+    @if (Model.Messages.Count() > 0)
+    {
+        @foreach (var msg in Model.Messages)
+        {
+            @if (msg.SentBy == "NCC")
+            {
+                <div class="col-md-4 pull-right mt-5 mb-3" style="background-color:lightgreen;border-radius:8px; width:fit-content">
+                    <p class="text-bold text-dark mt-2">@msg.MessageBody</p>
+                     <span class="pull-right text-small">@msg.DateSent.ToString("dd-MMM-yyyy")</span>
+
+               </div>
+            }
+            else @if (msg.SentBy == "OPERATOR")
+            {
+                <div class="col-md-4 pull-left mb-5" style="background-color:mistyrose; border-radius:8px; width:fit-content" >
+                    <p class="text-bold text-dark mt-2">@msg.MessageBody</p>
+                    <span class="pull-right text-small">@msg.DateSent.ToString("dd-MMM-yyyy")</span>
+
+                </div>
+            }
+        }
+    }
+    else
+    {
+        <p class="text-center text-info mt-3">There are no messages yet.</p>
+    }
+
+    <form method="post" asp-action="SendMessage" asp-controller="Forms" class="p-2">
+        <div class="form-group" style="background-color:mintcream; width:auto">
+                <div class="input-group">
+                    <textarea class="form-control" asp-for="MessageBody" rows="3"></textarea>
+                    <button class="btn btn-primary pull-right" type="submit"><span class="fa fa-share"></span> Send</button>
+                </div>
+               
+
+            <input class="form-control" asp-for="EntryId" hidden="hidden" />
+            <input class="form-control" asp-for="OperatorEmail" hidden="hidden" />
+            <input class="form-control" asp-for="OperatorUserId" hidden="hidden" />
+            <input class="form-control" asp-for="OperatorId" hidden="hidden" />
+            <input class="form-control" asp-for="NccUserId" hidden="hidden" />
+            <input class="form-control" asp-for="NccEmail" hidden="hidden" />
+            <input class="form-control" asp-for="ProductName" hidden="hidden" />
+        </div>
+    </form>
+</div>
+
+

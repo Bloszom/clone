@@ -1,0 +1,65 @@
+﻿@model pcea.Models.SystemConfig
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container">
+    <form asp-action="Index">
+        <div class="row">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="RecId" />
+            <div class="form-group col-6">
+                <label asp-for="SsoAppHost" class="control-label"></label>
+                <input asp-for="SsoAppHost" class="form-control" />
+                <span asp-validation-for="SsoAppHost" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="SsoAppHostProfile" class="control-label"></label>
+                <input asp-for="SsoAppHostProfile" class="form-control" />
+                <span asp-validation-for="SsoAppHostProfile" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="DocumentPath" class="control-label"></label>
+                <input asp-for="DocumentPath" class="form-control" />
+                <span asp-validation-for="DocumentPath" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="ImagePath" class="control-label"></label>
+                <input asp-for="ImagePath" class="form-control" />
+                <span asp-validation-for="ImagePath" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="TariffReviewBase" class="control-label"></label>
+                <input asp-for="TariffReviewBase" class="form-control" />
+                <span asp-validation-for="TariffReviewBase" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="SurveyReviewBase" class="control-label"></label>
+                <input asp-for="SurveyReviewBase" class="form-control" />
+                <span asp-validation-for="SurveyReviewBase" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="OthersReviewBase" class="control-label"></label>
+                <input asp-for="OthersReviewBase" class="form-control" />
+                <span asp-validation-for="OthersReviewBase" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6">
+                <label asp-for="TaskClosureAccount" class="control-label"></label>
+                <input asp-for="TaskClosureAccount" class="form-control" />
+                <span asp-validation-for="TaskClosureAccount" class="text-danger"></span>
+            </div>
+            <div class="form-group col-6 d-none">
+                <label asp-for="Secretary" class="control-label"></label>
+                <input hidden asp-for="Secretary" class="form-control" />
+                <span asp-validation-for="Secretary" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group text-center">
+            <input type="submit" value="Save" class="btn btn-primary w-25" />
+        </div>
+    </form>
+</div>
+

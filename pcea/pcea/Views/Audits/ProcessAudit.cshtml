@@ -1,0 +1,142 @@
+﻿@model IEnumerable<pcea.Models.WorkflowManager>
+@{
+    ViewData["Title"] = "Process Audit";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+
+
+<div class="card card-default card-table">
+    <div class="card-body">
+        <input id="hfdStage" type="hidden" value="1" />
+        <div class="text-center w-10">
+            @if(ViewBag.err != null)
+            {
+                <label class="text-danger">@ViewBag.err</label>
+            }
+            @if(ViewBag.msg != null)
+            {
+                <label class="text-success">@ViewBag.msg</label>
+            }
+        </div>
+        @*SEARCH AREA*@
+        <div class="row div-search" id="divSearch">
+            <div class="col-lg-12 form-group text-center">
+                <br />
+            </div>
+            <div class="col-lg-3 form-group">
+            </div>
+            <div class="col-lg-6 form-group">
+                @*<form asp-controller="Forms" asp-action="AuditTrail" method="post">
+                <div class="input-group mb-2">
+                <select asp-for="Name"
+                asp-items="@Model.NameList" class="form-control custom-select">
+                <option value="">Select AuditTrail</option>
+                </select>
+                <div class="input-group-append">
+                <input id="btnSearch" type="submit" value="Load" class="btn btn-primary" />
+                </div>
+                </div>
+                </form>*@
+            </div>
+            <div class="col-lg-3 form-group">
+            </div>
+
+            <div class="col-lg-12 form-group" style="overflow-x:auto">
+                @if (Model != null)
+                {
+                    <table class="table table-bordered table-striped table-hover table-sm text-nowrap" id="indexDataTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Action
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.TaskType)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.ProcessId)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.ReferenceNo)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.OperatorName)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.DateAssigned)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.ActionId)
+                                </th>
+                                @*<th>
+                            @Html.DisplayNameFor(model => model.ActionUrl)
+                            </th>*@
+                                @*<th>
+                            @Html.DisplayNameFor(model => model.UserId)
+                            </th>*@
+                                <th>
+                                    @Html.DisplayNameFor(model => model.RoleId)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.Remarks)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.DateCompleted)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.CompletionFlag)
+                                </th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (item.Reopen)
+                                        {
+                                            <a data-style="zoom-out" href="~/Audits/ReOpenTask?Taskid=@item.RecId" class="btn btn-outline-primary ladda-button"><span class="ladda-label"><i class="fa fa-refresh"> </i>  Re-Activate Task</span></a>
+                                        }
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.TaskType)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.ProcessId)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.ReferenceNo)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.OperatorName)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.DateAssigned)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.ActionId)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.RoleId)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.Remarks)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.DateCompleted)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.CompletionFlag)
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>

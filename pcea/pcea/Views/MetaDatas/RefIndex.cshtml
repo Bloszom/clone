@@ -1,0 +1,57 @@
+﻿@model IEnumerable<pcea.Models.MetaDataRef>
+    <div class="px-0 bg-transparent border-top-0 text-right" style="right:20px; top:-30px">
+        <a href="javascript: RefNew('@ViewBag.MetaDataType');" data-style="zoom-in" class="btn btn-sm btn-primary ladda-button">
+            <span class="ladda-label"><i class="fi fi-plus-a"></i>AddNew</span>
+        </a>
+        <!--<a asp-action="AddNew" class="btn btn-primary btn-sm">
+        <i class="fa fa-plus"></i> Add New
+    </a>-->
+    </div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.RecId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReferenceId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MetaDataType)
+            </th>
+            <th style="width:20%">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr class="nowrap">
+                <td>
+                    @Html.DisplayFor(modelItem => item.RecId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReferenceId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.MetaDataType)
+                </td>
+                <td>
+                    <a href="javascript: fieldRef('@item.RecId');" data-style="zoom-in" class="btn btn-sm btn-outline-primary ladda-button" title="View/Edit this dynamic field">
+                        <span class="ladda-label"><i class="fa fa-edit"></i></span>
+                    </a>
+                    <a href="@Url.ActionLink("Delete")/@item.RecId" class="btn btn-outline-danger btn-sm" title="Delete this field" onclick="return confirm('Are you sure you want to delete this field (@item.ReferenceId)?')"><i class="fa fa-trash"></i></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@section scripts{
+
+    <script>
+
+    </script>
+
+
+}

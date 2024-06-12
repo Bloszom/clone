@@ -1,0 +1,421 @@
+﻿
+@model IEnumerable<Reports>
+
+@{
+    ViewData["Title"] = "Export Tariff Requests";
+}
+
+@if (TempData["message"] != null || ViewBag.message != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+    <div class="p-2 w-75 m-auto small text-center mb-2 bg-success text-white">@msg</div>
+}
+@if (TempData["error"] != null || ViewBag.error != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+    <div class="p-2 w-75 m-auto small text-center mb-2 bg-danger text-white">@err</div>
+}
+
+<div class="bg-white p-2">
+    <div class="row">
+        <div class="col-md-5">
+            <div class=" sel form-group">
+                <small class="text-uppercase">Select Tariff Submission</small>
+                <div class="input-group">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <i class="fa fa-file"></i>
+                        </div>
+                    </div>
+                    @Html.DropDownList("Surveys", (SelectList)ViewBag.TariffList, "Select a tariff type", new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="form-group">
+                <select id="selFields" multiple="multiple">
+                </select>
+                <input type="hidden" name="clmFields" id="clmFields" value="" />
+            </div>
+            <div class="form-group text-right mt-3">
+                <button id="btnLoad" class="btn btn-secondary btn-sm" type="submit">Load <i class="fa fa-angle-double-right"></i></button>
+                <a href="javascript: exportData();" class="btn btn-sm btn-outline-primary">
+                    Export Data
+                </a>
+            </div>
+        </div>
+        <div class="col-md-7 table-responsive">
+            <br />
+            <table id="tblExport" class="table table-striped table-hover">
+                <thead>
+                    <tr id="trHead">
+                        <td>Heading</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="tbBody">
+                        <td>
+                            <h4 class="font-weight-light text-center small">Construct and upload from the left side of this page</h4>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="form-group text-right mt-2">
+                <button class="btn btn-primary btn-sm csvDownload" title="Download the above report"><i class="fa fa-download"></i> Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Management -->
+<div class="modal fade" id="modalExport">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Export Tariff</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div id="exportLoader" class="modal-body export-loader">
+                <div class="text-center"><img src="~/img/loading.gif" /></div>
+            </div>
+            <div id="exportBody" class="modal-body export-body" style="overflow-x:auto">
+
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Export Management /-->
+
+
+
+
+@section Scripts{
+    <script src="~/assets/vendor/multiselect/js/jquery.multi-select.js"></script>
+    <script src="~/js/jquery.table2excel.js"></script>
+    <script type="text/javascript">
+        function DisplayExportBody() {
+            try {
+                $('.export-loader').removeAttr('style');
+                $('.export-body').removeAttr('style');
+
+                $('.export-loader').attr('style', 'display:none');
+                $('.export-body').attr('style', 'display:normal');
+            } catch (e) {
+            }
+        }
+        function DisplayExportLoader() {
+            try {
+                $('.export-loader').removeAttr('style');
+                $('.export-body').removeAttr('style');
+
+                $('.export-loader').attr('style', 'display:normal');
+                $('.export-body').attr('style', 'display:none');
+            } catch (e) {
+            }
+        }
+        function exportData() {
+            var entryId = $('#Surveys').val();
+
+            $('#modalExport').modal('show');
+            DisplayExportLoader();
+
+            //get task details
+            var PostBackURL = '/Report/ExportTariffData';
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "lEntryId": entryId },
+                datatype: "json",
+                success: function (data) {
+                    $('#exportBody').html(data);
+                    DisplayExportBody();
+                },
+                error: function () {
+                    $('#modalExport').modal('hide');
+                    alert("Error.");
+                }
+            });
+        }
+
+        $().ready(function () {
+
+            var url = window.location.pathname;
+            var id = url.substring(url.lastIndexOf('/') + 1);
+
+            if (!isNaN(parseInt(id))) {
+                $('#Surveys').val(id);
+            }
+
+            function tariffEport() {
+                var fa = $('#Surveys').parent().find('i');
+                if (!isNaN(parseInt(id))) {
+                    fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                }
+
+                try {
+                    $('#selFields').empty();
+                    $.ajax({
+                        url: "/Report/ListLabels",
+                        type: "POST",
+                        data: { "entry": id },
+                        dataType: 'json',
+                        success: function (response) {
+                            var decodeLabels = decodeURIComponent(response.labels);
+
+                            var labels = JSON.parse(decodeLabels);
+                            $.each(labels, function (i, v) {
+                                $('#selFields').append($('<option>', { value: v, text: v }).attr('title', v));
+                            });
+                            $("#selFields").html($("#selFields option"));
+                            $('#selFields').multiSelect('refresh');
+                            fa.attr('class', 'fa fa-file');
+                        },
+                        error: function (err) {
+                            console.log("error:" + err);
+                            fa.attr('class', 'fa fa-file');
+                        }
+                    });
+                } catch (e) {
+                    //console.log("FATAL ERROR - " + e);
+                    fa.attr('class', 'fa fa-file');
+                }
+            };
+
+
+
+
+            $('#selFields').multiSelect({
+                selectableHeader: '<small class="text-uppercase text-gray">Available Fields</small>',
+                selectionHeader: '<small class="text-uppercase text-gray">Selected Fields</small>',
+                afterSelect: function (values) { buildColumns(values); },
+                afterDeselect: function (values) { buildColumns(values); }
+            });
+            function buildColumns(val) {
+                try {
+                    var fds = [];
+                    $('.ms-selection ul li').each(function (i, v) { if ($(v).is(':visible')) fds.push($(v).find('span').text()); });
+                    $('#clmFields').val(JSON.stringify(fds));
+                } catch (e) {
+                    alert(e);
+                }
+            }
+
+            b = [],
+
+                $('#btnLoad').click(function () {
+                    var entry;
+                    if (isNaN(parseInt(id))) {
+                        entry = $('#Surveys').val();
+                    } else {
+                        entry = id;
+                    }
+
+                    var fa = $(this).find('i');
+                    fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                    $.ajax({
+                        url: "/Report/ExportLabelValue",
+                        type: "POST",
+                        data: { "entry": entry },
+                        dataType: 'json',
+                        success: function (response) {
+                            var decodeLabelValue = decodeURIComponent(response.labelValue);
+                            var labelValue = JSON.parse(decodeLabelValue);
+                            $('#trHead').html("");
+                            $('#tbBody').html("");
+
+                            let result = select(JSON.parse($('#clmFields').val()), labelValue);
+
+
+                            //obj(JSON.parse($('#clmFields').val()), labelValue);
+                            var i = 0;
+                            for (let l in result) {
+                                $('#trHead').append($('<th>', { text: l }));
+                                i = 0;
+                                for (let v of result[l]) {
+                                    // 
+                                    if (i === 0)
+                                        $('#tbBody').append($('<td>', { text: v }));
+                                    else {
+                                        table.insertRow(y);
+
+                                        //table.insertRow(y);
+                                        //i++;
+                                        //y++;
+                                    }
+                                    i++;
+                                    //$('tbBody').find('tr:last :after').append($('<tr>', { text: v })); i++;
+                                }
+
+                            }
+
+                            console.log(tbody);
+                            fa.attr('class', 'fa fa-angle-double-right');
+                        },
+                        error: function (err) {
+                            console.log("error:" + err);
+                            fa.attr('class', 'fa fa-angle-double-right');
+                        }
+                    });
+                });
+
+            Array.prototype.contains = function (obj) {
+                var i = this.length;
+                while (i--) {
+                    if (this[i] == obj) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+
+            //function obj(ar, arrObjs) {
+            //    let p = [],
+            //        z = [];
+
+            //    for (let y of arrObjs) {
+            //        for (let t in y) {
+            //            p.push(t);
+            //        }
+            //    }
+            //        for (let r of p) {
+            //            for (let u of ar) {
+            //                if ($.inArray(u, p) !== -1) {
+            //                    console.log("worked");
+            //                }
+            //            }
+            //        }
+            //        console.log("p = " +  z);
+            //    return p;
+            //}
+
+            //function select(arr, arrObj) {
+            //    let o = {},
+            //        obj = {},
+            //        i = 0;
+            //    var arr = [],
+            //        obj1 = {};
+            //    
+            //    for (let x of arr) {
+            //        
+            //        for (x in arrObj) {
+            //            
+            //            arr = [];
+            //            for (let k of arrObj) {
+            //                
+            //                if (x in k) {
+            //                    arr.push(k[x]);
+            //                    o.x = arr;
+            //                }
+            //            }
+            //        }
+            //        console.log(arr);
+            //    }
+            //    return o;
+            //}
+
+            function select(arr, arrObj) {
+                let o = {};
+                let i = 0,
+                    obj = {};
+                var ar = [],
+                    a = [],
+                    obj1 = {};
+
+                $.each(arrObj, function (i, obj) {
+                    a.push(Object.keys(obj));
+                    console.log("array = " + arr);
+                })
+
+                for (let x of arr) {
+                    obj1 = {},
+                        ar = [];
+                    for (let k of arrObj) {
+                        if (x in k) {
+                            ar.push(k[x]);
+                            o[x] = ar;
+                        }
+                    }
+                }
+                console.log(o);
+                return o;
+            }
+
+            //function select(arr, arrObj) {
+            //    let o = {};
+            //    let i = 0,
+            //        obj = {};
+            //    var ar = [],
+            //        obj1 = {};
+
+            //    for (let x of arr) {
+            //        obj1 = {},
+            //        ar = [];
+            //        for (let k of arrObj) {
+            //            
+            //            if (x in k) {
+            //                o[x] = k[x];
+            //                obj1[x] = k[x];
+            //            }
+            //                if (Object.keys(obj1).includes(x) === false) {
+            //                    obj[x + i] = ar.push(k[x]);
+            //                    //o[k] = x[k];
+            //            }
+
+            //        }
+            //    }
+            //    console.log(obj);
+            //    return o;
+            //}
+
+            function getKeys(object, value) {
+                return Object.keys(object).find(key => object[key] === value);
+            }
+
+            $('#Surveys').change(function () {
+                var fa = $(this).parent().find('i');
+                fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                try {
+                    $('#selFields').empty();
+                    $.ajax({
+                        url: "/Report/ListLabels",
+                        type: "POST",
+                        data: { "entry": $(this).val() },
+                        dataType: 'json',
+                        success: function (response) {
+                            var decodeLabels = decodeURIComponent(response.labels);
+
+                            var labels = JSON.parse(decodeLabels);
+                            $.each(labels, function (i, v) {
+                                $('#selFields').append($('<option>', { value: v, text: v }).attr('title', v));
+                            });
+                            $("#selFields").html($("#selFields option"));
+                            $('#selFields').multiSelect('refresh');
+                            fa.attr('class', 'fa fa-file');
+                        },
+                        error: function (err) {
+                            console.log("error:" + err);
+                            fa.attr('class', 'fa fa-file');
+                        }
+                    });
+                } catch (e) {
+                    //console.log("FATAL ERROR - " + e);
+                    fa.attr('class', 'fa fa-file');
+                }
+            });
+
+            $('.csvDownload').click(function () {
+                $("#tblExport").table2excel({
+                    name: "Tariff Details",
+                    filename: "TariffExport",//do not include extension
+                    fileext: ".xls" // file extension
+                });
+            });
+
+            tariffEport();
+
+        });
+
+    </script>
+}

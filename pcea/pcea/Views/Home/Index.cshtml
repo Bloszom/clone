@@ -1,0 +1,179 @@
+﻿@model pcea.Models.Login
+@{
+    Layout = null;
+    ViewBag.Title = "Login";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Economic Analysis &amp; Tariff Management System</title>
+    <meta name="description" content="Economic Analysis and Tariff Management System">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="~/assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="~/assets/css/fontastic.css">
+    <link rel="stylesheet" href="~/assets/fontisto/fontisto.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" href="~/assets/css/grasp_mobile_progress_circle-1.0.0.min.css">
+    <link rel="stylesheet" href="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.css">
+    <link rel="stylesheet" href="~/assets/css/style.blue.premium.css" id="theme-stylesheet">
+    <link rel="stylesheet" href="~/assets/css/custom.css">
+    <link rel="stylesheet" href="~/assets/vendor/ladda/ladda-themeless.min.css">
+    <link rel="shortcut icon" href="~/assets/img/favicon.ico">
+</head>
+<body>
+    <div class="container-fluid px-3">
+        <div class="row min-vh-100">
+            <div class="col-md-5 col-lg-6 col-xl-4 px-lg-5 d-flex align-items-center">
+                <div class="w-100 py-5">
+                    <div class="text-center">
+                        <img src="~/assets/img/ncclogo.svg" alt="Nigerian Communications Commission" style="max-width: 4rem;" class="img-fluid">
+
+                        <div class="mb-3 text-primary">Economic Analysis &amp; Tariff Management System</div>
+                        <h1 class="display-4 mb-3">
+                            Sign In
+                        </h1>
+                    </div>
+
+                    @using (Html.BeginForm("Dashboard", "Home", FormMethod.Post, new { @class = "form-validate" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true)
+
+                        @if (@ViewBag.Message != null)
+                        {
+                            <p class="border border-danger small text-center text-danger p-2">@ViewBag.Message</p>
+                        }
+                        <div class="form-group">
+                            <label>Email Address &nbsp;<span class="text-danger text-sm">@Html.ValidationMessageFor(model => model.Username)</span></label>
+                            @Html.TextBoxFor(model => model.Username, new { @placeholder = "name@address.com", @class = "form-control" })
+                            @*<input name="loginUsername" type="email" placeholder="name@address.com" autocomplete="off" required data-msg="Please enter your email" class="form-control">*@
+                        </div>
+                        <div class="form-group mb-4">
+                            <div class="row">
+                                <div class="col">
+                                    <label>Password &nbsp;<span class="text-danger text-sm">@Html.ValidationMessageFor(model => model.Password)</span></label>
+                                </div>
+                                <div class="col-auto"><a href="#" class="form-text small text-muted">Forgot password?</a></div>
+                            </div>
+                            @Html.PasswordFor(model => model.Password, new { @placeholder = "Password", @class = "form-control" })
+                            @*<input name="loginPassword" placeholder="Password" type="password" required data-msg="Please enter your password" class="form-control">*@
+                        </div>
+                        <!-- Submit-->
+                        @*<button class="btn btn-lg btn-block btn-primary mb-3">Sign in</button>*@
+                        <p class="ladda-progress-demo">
+                            <button data-style="slide-right" class="btn btn-lg btn-block btn-primary ladda-button"><span class="ladda-label"><i class="fa fa-sign-in"></i> Enter</span></button>
+                        </p>
+                        <!-- Link-->
+                        <p class="text-center"><small class="text-muted text-center">Don't have an account yet? <a href="#">Contact your Administrator</a>.</small></p>
+                    }
+                    <div class="form-group error">
+                        @if (@ViewBag.Failedcount != null)
+                        {
+                            <label> Failed Attempt count is: @ViewBag.Failedcount</label>
+                        }
+
+                        @if (@ViewBag.NotValidUser != null)
+                        {
+                            <label> @ViewBag.NotValidUser</label>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7 col-lg-6 col-xl-8 d-none d-md-block">
+                <section class="page-relative">
+                    <div class="container-fluid">
+                        <!-- Page Header-->
+                        <header>
+                            <p>
+                                <small class="font-italic">Welcome to </small>
+                                <h1 class="text-center text-uppercase pl-5 pr-5 text-gray">
+                                    Policy Competition and Economic Analysis Department
+                                </h1>
+                            </p>
+                        </header>
+                        <p class="text-justify">
+                            <i class="fa fa-bar-chart fa-4x pull-left text-gray"></i>
+                            <small>
+                                This portal provides interface for operators to submit questionnaires, surveys and reports to the department electronically. Telecommunications operators are obligated, under the terms of their licenses, to provide the NCC with such data on a regular basis for analytical review and publishing.
+                                Please, login to view the latest Nigerian telecommunications industry data as gathered from regular studies, surveys and reports, conducted and collected by the Nigerian Communications Commission.
+                            </small>
+                        </p>
+                        <div class="card small">
+                            <div class="card-header pb-0">
+                                <ul class="nav nav-tabs border-bottom-0">
+                                    <li class="nav-item">
+                                        <a id="eau-tab" href="#eau" data-toggle="tab" role="tab" class="nav-link active">
+                                            <span class="d-none d-sm-inline-block">Economic Analysis Unit</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="ctu-tab" href="#ctu" data-toggle="tab" role="tab" class="nav-link">
+                                            <span class="d-none d-sm-inline-block">Competition &amp; Tariff Unit</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a id="pmu-tab" href="#pmu" data-toggle="tab" role="tab" class="nav-link">
+                                            <span class="d-none d-sm-inline-block">Policy &amp; Knowledge Management Unit</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="card-body">
+                                <div class="tab-content border">
+                                    <div class="tab-pane fade show active p-3" role="tabpanel" id="eau" aria-labelledby="eau-tab">
+                                        <p>
+                                            <i class="fa fa-info-circle fa-3x pull-left text-info"></i>
+                                            The Commission regularly conducts studies and surveys and produces reports on the telecommunications industry,
+                                            and telecommunications operators are obligated, under the terms of the licenses,
+                                            to provide the NCC with such data on a regular basis for analytical review and publishing.
+                                            &nbsp; <a href="#">Read more</a>
+                                        </p>
+                                    </div>
+                                    <div class="tab-pane fade p-3" role="tabpanel" id="ctu" aria-labelledby="ctu-tab">
+                                        <p>
+                                            <i class="fa fa-info-circle fa-3x pull-left text-info"></i>
+                                            Consistent with Section 108 of the Nigerian Communications Act 2003 (NCA 2003),
+                                            the Commission is responsible for the approval of tariffs and other charges for the provision of service by
+                                            licensed telecommunications service providers. &nbsp; <a href="#">Read more</a>
+                                        </p>
+                                    </div>
+                                    <div class="tab-pane fade p-3" role="tabpanel" id="pmu" aria-labelledby="pmu-tab">
+                                        <p>
+                                            <i class="fa fa-info-circle fa-3x pull-left text-info"></i>
+                                            In furtherance of the Commission's commitment to providing up-to-date statistics on the telecommunications industry,
+                                            the Commission conducts a regular survey of telecoms operators in which the operators provide information to the Commission.
+                                            The provision of this information to the Commission is an obligation of all telecoms licensees as mandated in Sections 64-66 of the
+                                            Nigerian Communications Act 2003 and the Nigerian Communications Commission enforcement processes regulations.
+                                            &nbsp; <a href="#">Read more</a>
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript files-->
+    <script src="~/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="~/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/grasp_mobile_progress_circle-1.0.0.min.js"></script>
+    <script src="~/assets/vendor/jquery.cookie/jquery.cookie.js"></script>
+    <script src="~/assets/vendor/chart.js/Chart.min.js"></script>
+    <script src="~/assets/vendor/jquery-validation/jquery.validate.min.js"></script>
+    <script src="~/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js"></script>
+
+    <script src="~/assets/vendor/ladda/spin.min.js"></script>
+    <script src="~/assets/vendor/ladda/ladda.min.js"></script>
+    <script src="~/assets/js/components-ladda.js"></script>
+    <!-- Main File-->
+    <script src="~/assets/js/front.js"></script>
+</body>
+</html>
+

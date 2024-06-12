@@ -1,0 +1,205 @@
+﻿@model IEnumerable<MailMessage>
+
+@section Css {
+    <style>
+        #dvForm, #frmReset {
+            display: none;
+        }
+
+            #frmReset button {
+                /*font-size: medium;*/
+            }
+
+        .lbl {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+
+        .no-edit {
+            pointer-events: none;
+        }
+    </style>
+}
+
+@{
+    ViewData["Title"] = ViewBag.title;
+    Layout = "~/Views/Shared/_LayoutOperator.cshtml";
+
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
+            <div class="form-inline mb-2">
+                <i class="fa fa-filter fa-2x text-gray visible-md"></i> &nbsp; &nbsp;
+                @Html.DropDownList("notification_type", (SelectList)ViewBag.NotificationType, "All Notification Type", new { @class = "form-control ftypes" })
+
+                &nbsp;
+                <select class="form-control ftypes" id="form_typeM">
+                    <option value="" disabled="disabled" selected="selected">-Month-</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                &nbsp;
+                <select class="form-control ftypes" id="form_type">
+                    <option value="" disabled="disabled" selected="selected">-Year-</option>
+                    <option value="">2020</option>
+                    <option value="">2021</option>
+                </select>
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (ViewBag.error != null || TempData["error"] != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+<div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+}
+@if (ViewBag.message != null || TempData["message"] != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+<div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+}
+
+<div id="dvForm" class="border p-3 bg-white mb-2" style="position:relative;">
+    <button class="text-danger close right" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
+
+
+    <div id="dvResponse">
+
+    </div>
+
+    <span class="clearfix">&nbsp;</span>
+</div>
+
+
+<div class="table-responsive bg-white">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="border-top-0">
+                    <span class="text-dark text-uppercase"><i class="fa fa-file"></i> Notifications</span>
+                </th>
+                <th class="border-top-0 text-right">
+                    <i class="fa fa-mouse-pointer"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                var i = 0;
+                @foreach (var item in  Model)
+                 {
+                    i++;
+                        string frm = (@item.MailType != null ? "_" + @item.MailType.ToLower() : "").Replace(" ", "_");
+                    <tr class=" @frm itm">
+                        <td class="">
+                            @item.ReferenceNo
+                        </td>
+                        <td class="">
+                            @item.MailType
+                        </td>
+                        <td class="">
+                            @item.DateCreated.ToShortDateString()
+                        </td>
+                        <td class="">
+                            <a href="#" id="@item.RecId" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-html="@item.MailBody">
+                                <i class="fa fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+                if (i == 0)
+                {
+                <tr>
+                    <td colspan="10">
+                        <h4 class="font-weight-light text-center small">No Data Found</h4>
+                    </td>
+                </tr>
+                }
+             }
+            else
+            {
+            <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+@section Scripts{
+
+    <script type="text/javascript">
+
+        jQuery(function ($) {
+
+            var mForm = $('#dvResponse');
+            $('#dvForm').slideUp('slow'); mForm.empty();
+
+            $('.itm a').click(function () {
+                var i = $(this).find('i');
+                i.attr('class', 'fa fa-gear fa-spin');
+                try {
+                    var data = $(this).data('html');
+                    document.getElementById("dvResponse").innerHTML = data;
+                    //var parser = new DOMParser();
+
+                    //var html = parser.parseFromString(data.trim(), "text/html");
+                    //document.getElementById("dvResponse").innerHTML = html.toString();
+                    //console.log(html);
+
+                    //var div = $('#dvResponse').prop("innerHTML", );
+                    //$.parseHTML(data, div);
+                    $('#dvForm').slideDown('slow');
+                    $('#dvResponse').removeClass('no-edit'); scrollTop(i);
+                    i.attr('class', 'fa fa-eye');
+                } catch (e) {
+                    alert(e);
+                    scrollTop(i);
+                }
+            });
+
+
+            function scrollTop(i) {
+                try {
+                    $("html, body").animate({ scrollTop: 0 }, "slow");
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+                i.attr('class', 'fa fa-eye');
+            }
+
+            $('.close').click(function () { $('#dvForm').slideUp('slow'); mForm.empty(); })
+
+            $('.ftypes').change(function () {
+                if ($(this).val() == '') {
+                    $('.itm').show('slow');
+                } else {
+                    $('.itm').hide();
+                    var cls = "_" + $(this).val().toLowerCase().replace(' ', '_');
+                    $('.' + cls).show('slow');
+                }
+            });
+
+
+
+
+        });
+
+
+
+    </script>
+}

@@ -1,0 +1,301 @@
+﻿@model pcea.Models.WorkflowManager
+@*<form asp-action="CommitTask" asp-controller="Workflows">*@
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<input type="hidden" asp-for="RecId" id="recId" />
+<dl class="row">
+    <dt class="col-sm-2" style="display:none">
+        @Html.DisplayNameFor(model => model.TaskId)
+    </dt>
+    <dd class="col-sm-4" style="display:none">
+        @Html.DisplayFor(model => model.TaskId)
+    </dd>
+    <dt class="col-sm-2" style="display:none">
+        @Html.DisplayNameFor(model => model.TaskType)
+    </dt>
+    <dd class="col-sm-4" style="display:none">
+        @Html.DisplayFor(model => model.TaskType)
+    </dd>
+
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.ProcessId)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.ProcessId)
+    </dd>
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.ReferenceNo)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.ReferenceNo)
+    </dd>
+
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.OperatorName)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.OperatorName)
+    </dd>
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.DateAssigned)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.DateAssigned)
+    </dd>
+
+    <dt class="col-sm-2" style="display:none">
+        @Html.DisplayNameFor(model => model.ActionUrl)
+    </dt>
+    <dd class="col-sm-9" style="display:none">
+        @Html.DisplayFor(model => model.ActionUrl)
+    </dd>
+
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.UserId)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.UserId)
+    </dd>
+    <dt class="col-sm-2">
+        @Html.DisplayNameFor(model => model.RoleId)
+    </dt>
+    <dd class="col-sm-4">
+        @Html.DisplayFor(model => model.RoleId)
+    </dd>
+
+    <dt class="col-sm-2 text-small text-nowrap">
+        @Html.DisplayNameFor(model => model.ActionId)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DropDownListFor(m => m.ActionId, new SelectList(Model.ActionList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "userAction" })
+    </dd>
+    <dt class="col-sm-2 text-small">
+        @Html.DisplayNameFor(model => model.Remarks)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.TextAreaFor(m => m.Remarks, new { @class = "form-control form-control-sm", @id = "userRemarks" })
+    </dd>
+    <dt class="col-sm-2 text-small">
+        @Html.DisplayNameFor(model => model.DestinationUserId)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DropDownListFor(m => m.DestinationUserId, new SelectList(Model.UserList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "userDestination" })
+    </dd>
+</dl>
+
+
+<div class="form-group">
+    <button class="btn btn-success btn-sm commit-task pull-right" title="Commit changes to workflow and forward same to selected officer">
+        <i class="fa fa-check"></i> Commit Task
+    </button>
+</div>
+@*</form>*@
+
+
+
+@*@section Scripts {
+        @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    }*@
+
+<script>
+
+    $('.commit-task').click(function() {
+        //alert("here");
+        DisplayTaskManagerLoader();
+        //get input values
+        var sRecId = $('#recId').val();
+        var sDestUserId = $('#userDestination').val();
+        var formData = new FormData();
+        var remark = $('#remark').val();
+        var status = $("#Status").val();
+        var sCurrentUrl = window.location.href;
+        var sUserAction = $('#userAction').val();
+        var sUserRemarks = $('#userRemarks').val();
+        var approvalFile = $("#approvalFile");
+        var entryId = $("#Entry").val();
+
+        if (sDestUserId == null) {
+            alert("Forward To cannot be empty.");
+            return;
+        }
+
+        //commit the task to the workflow
+        var PostBackURL = '/Workflows/CommitTask';
+        $.ajax({
+            type: "GET",
+            url: PostBackURL,
+            contentType: "application/json; charset=utf-8",
+            data: { "RecId": sRecId, "ActionId": sUserAction, "Remarks": sUserRemarks, "UserId": sDestUserId },
+            datatype: "json",
+            success: function(data) {
+                $('#taskManagerBody').html(data);
+                DisplayTaskManagerBody();
+            },
+            error: function(err) {
+                $('#modalTaskManager').modal('hide');
+                alert(err);
+            }
+        });
+
+        //get task trail
+        PostBackURL = '/Workflows/GetTaskTrailByUrl';
+        //var sCurrentUrl = window.location.href;
+        $.ajax({
+            type: "GET",
+            url: PostBackURL,
+            contentType: "application/json; charset=utf-8",
+            data: { "ActionUrl": sCurrentUrl },
+            datatype: "json",
+            success: function(data) {
+                $('#taskManagerTrail').html(data);
+                DisplayTaskManagerTrail();
+            },
+            error: function() {
+                $('#taskManagerTrail').html("");
+            }
+
+        });
+
+        setTimeout(function() {
+            window.reload();
+        }, 500);
+        /*
+        
+        
+        var formData = new FormData();
+        var remark = $('#remark').val();
+        var status = $("#Status").val();
+        var sCurrentUrl = window.location.href;
+        var sUserRemark = $('#userRemarks').val();
+
+        var approvalFile = $("#approvalFile");
+
+        if (status == "APPROVED" && sUserAction == "APPROVE" || status == "REJECTED") {
+            var id = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+            var sDestUserId = $('#userDestination').val();
+
+            var dataType = $("#dataType").val();
+
+            //if (dataType == "TARIFF_REQUEST_NOTIFICATION")
+            //    $("#frmProcess").submit();
+            //if (processData.values() == null || processData == undefined) {
+            formData.append("remarks", remark);
+            formData.append("status", status);
+            formData.append("entryId", id);
+            formData.append("dataType", dataType);
+            formData.append("DestUserId", sDestUserId);
+
+            if ($(approvalFile)[0] != undefined) {
+                var file = $(approvalFile)[0].files;
+                formData.append("file", file[0]);
+            }
+
+            $.ajax({
+                url: "/Forms/PostRemark",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false,
+                complete: function (response) {
+                    
+                    console.log(response);
+                    $.ajax({
+                        url: "/Workflows/TerminateTask",
+                        type: "POST",
+                        data: { "ActionUrl": sCurrentUrl, "remarks": sUserRemark, "ActionId": sUserAction, "status": status, "DestUserId": sDestUserId }
+                    }).done(function (resp) {
+                        
+                        $('#taskManagerBody').html(resp);
+                        DisplayTaskManagerBody();
+                        var id = parseInt(sCurrentUrl.substring(sCurrentUrl.lastIndexOf("/") + 1));
+                        //$.ajax({
+                        //    url: "/Forms/ApproveTariff",
+                        //    type: "POST",
+                        //    data: { "id": id },
+                        //    complete: function (resp) {
+                        //        var w = window;
+                        //        $(w.document.body).html(resp);
+                        //    }
+                        //})
+
+                        window.location.reload();
+                    });
+
+                }
+            });
+            //}).done(function () {
+            //    alert("Remark submitted successfully!");
+            //    window.location;
+            //}).fail(function () {
+            //    alert("There was and unexpected error while processing your request!");
+            //});
+        }
+        else {
+
+        }
+        */
+    });
+
+        //$('.commit-task').click(function () {
+        //    DisplayTaskManagerLoader();
+        //    var formData = new FormData();
+        //    var remark = $('#remark').val();
+        //    var status = $("#Status").val();
+        //    var sCurrentUrl = window.location.href;
+        //    var sUserAction = $('#userAction').val();
+        //    var file;
+        //    var id = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
+        //    
+        //    var dataType = $("#dataType").val();
+        //    if (dataType == "TARIFF_REQUEST_NOTIFICATION") {
+        //        file = $("#approvalFile")[0].files;
+        //        formData.append("file", file[0]);
+        //    }
+
+        //    formData.append("remarks", remark);
+        //    formData.append("status", status);
+        //    formData.append("entryId", id);
+        //    formData.append("dataType", dataType);
+
+        //    $.ajax({
+        //        url: "/Forms/PostRemark",
+        //        type: "POST",
+        //        data: formData,
+        //        processData: false,
+        //        contentType: false,
+        //        cache: false,
+        //        complete: function (response) {
+        //            $.ajax({
+        //                url: "/Workflows/TerminateTask",
+        //                type: "POST",
+        //                data: { "ActionUrl": sCurrentUrl }
+        //            }).done(function (resp) {
+        //                
+        //                $('#taskManagerBody').html(resp);
+        //                DisplayTaskManagerBody();
+        //                var id = parseInt(sCurrentUrl.substring(sCurrentUrl.lastIndexOf("/") + 1));
+        //                //$.ajax({
+        //                //    url: "/Forms/ApproveTariff",
+        //                //    type: "POST",
+        //                //    data: { "id": id },
+        //                //    complete: function (resp) {
+        //                //        
+        //                //        var w = window;
+        //                //        $(w.document.body).html(resp);
+        //                //    }
+        //                //})
+        //                window.location.reload();
+        //            })
+        //        }
+        //    });
+        //    //}).done(function () {
+        //    //    alert("Remark submitted successfully!");
+        //    //    window.location;
+        //    //}).fail(function () {
+        //    //    alert("There was and unexpected error while processing your request!");
+        //    //});
+        //});
+
+</script>
+
+

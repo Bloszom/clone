@@ -1,0 +1,264 @@
+﻿@model IEnumerable<pcea.Models.AppRole>
+
+@{
+    ViewData["Title"] = "Roles and Privileges";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+
+<p>
+    <a href="javascript: newRole()" data-style="zoom-in" class="btn btn-sm btn-primary">
+        <span class="ladda-label"><i class="fi fi-plus-a"></i></span>
+        Add New
+    </a>
+</p>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="table-responsive table-responsive-sm">
+            <table class="table table-bordered table-striped table-hover table-sm text-nowrap" id="indexDataTable">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.RoleName)
+                        </th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.RoleName)
+                            </td>
+                            <td style="width:20px" class="text-center">
+                                <a id="processname" href="javascript: GetRoleDetails('@item.RoleId','@item.RoleName' );" data-style="zoom-in" class="btn btn-sm btn-outline-primary" title="Edit this field">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+@*                                <a href="@Url.ActionLink("DeleteConfirmed")/@item.RoleId" class="btn btn-outline-danger btn-sm" title="Delete this field" onclick="return confirm('Are you sure you want to delete this process flow (@item.RoleName)?')"><i class="fa fa-trash"></i></a>*@
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6" id="roledetails" style="border-color:cornflowerblue; border-left-style:solid; border-width:thin">
+        <div id="render-priv" style="display:none">
+            <div class="text-center">
+                <img src="~/img/loading.gif" />
+            </div>
+        </div>
+        <div id="privContainer" style="display:none">
+            <div class="text-info" id="roleName"></div>
+            <div class="table-responsive" id="roleContent">
+
+            </div><!-- /.card-body -->
+            <a href="javascript: savePrivileges() " id="savePriv" data-style="slide-right" class="btn btn-lg btn-block btn-primary ladda-button"><span class="ladda-label"><i class="fa fa-save"></i> Save</span></a>
+            @*<a href="javascript: savePrivileges() " data-style="zoom-in" class="btn btn-primary btn-sm ladda-button" id="btnGet" title="Save selected privileges">
+                <span class="ladda-label"><i class="fi fi-save"></i></span>
+                Save
+            </a>*@
+            <input id="roleId" type="hidden" />
+        </div>
+    </div>
+</div>
+
+@*Modal for reference Add New and Edit*@
+<div class="modal fade" id="RoleModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <label class="modal-title">User Manager</label>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="RoleModalContent">
+                @if (ViewBag.message != null)
+                {
+                    <div class="text-center small"><div class="text-danger">@ViewBag.Message</div></div>
+                }
+
+                <dl class="row">
+                    <dt class="col-sm-2 ">
+                        <label class="nowrap">Role name</label>
+                    </dt>
+                    <dd class="col-sm-10">
+                        <input id="txtRoleName" type="text" placeholder="enter only capital letters" class="form-control" />
+                    </dd>
+                </dl>
+                <div class="modal-footer ">
+                    <div class="note-modal-footer">
+                        <a id="saveRole"  data-style="slide-right" class="btn btn-block btn-primary ladda-button text-white"><span class="ladda-label"><i class="fa fa-save"></i> Save</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+@section scripts{
+    <script>
+        var l = Ladda.create(document.getElementById('savePriv'));
+        var s = Ladda.create(document.getElementById('saveRole'));
+        //----------------------Get Role Privileges for a given role---------------------------
+        function GetRoleDetails(roleid, rolename) {
+            $('#render-priv').removeAttr("style");
+            $('#render-priv').attr("style", "display:normal");
+
+            $('#privContainer').removeAttr("style");
+            $('#privContainer').attr("style", "display:none");
+
+            $("#roleId").val(roleid);
+            $("#roleName").html(rolename);
+            var PostBackURL = '/AppRoles/GetPriviledges';
+            $.ajax({
+                cache: false,
+                type: 'GET',
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                datatype: 'json',
+                data: { 'sRoleId': roleid },
+                success: function (response) {
+                    debugger;
+                    if (response == '') {
+                        alert('Privileges not yet assigned');
+                        $('#render-priv').removeAttr("style");
+                        $('#render-priv').attr("style", "display:none");
+
+                        $('#privContainer').removeAttr("style");
+                        $('#privContainer').attr("style", "display:none");
+                    }
+                    var obj = JSON.parse(response);
+                    var toAppend = '<table class="table" id="privTable">';
+                    toAppend += '<tr>' +
+                        '<th>' +
+                        'PrivilegeId' +
+                        '</th>' +
+                        '<th>' +
+                        'Description' +
+                        '</th>' +
+                        '<th>' +
+                        '<tbody>';
+                    for (var i = 0; i < obj.length; i++) {
+                        var chkTemp = obj[i]['Assigned'];
+                        var chkValue = '';
+                        if (chkTemp == 1)
+                            chkValue = '<input type="checkbox" id="chkAssigned' + i + '" checked="checked" />';
+                        else
+                            chkValue = '<input type="checkbox" id="chkAssigned' + i + '" />';
+                        toAppend += '<tr>' +
+                            '<td>' + obj[i]['PrivilegeId'] + '</td>' +
+                            '<td>' + obj[i]['Description'] + '</td>' +
+                            '<td>' + chkValue + '</td>' +
+                            '</tr></tbody>';
+                    }
+                    $('#roleContent').html('');
+                    $('#btnGet').show();
+                    $('#roleContent').html(toAppend);
+
+                    $('#render-priv').removeAttr("style");
+                    $('#render-priv').attr("style", "display:none");
+
+                    $('#privContainer').removeAttr("style");
+                    $('#privContainer').attr("style", "display:normal");
+                },
+                failure: function (response) {
+                    debugger;
+                    alert(response);
+                    $('#render-priv').removeAttr("style");
+                    $('#render-priv').attr("style", "display:none");
+
+                    $('#privContainer').removeAttr("style");
+                    $('#privContainer').attr("style", "display:none");
+                },
+                error: function (response) {
+                    debugger;
+                    alert(response);
+                    $('#render-priv').removeAttr("style");
+                    $('#render-priv').attr("style", "display:none");
+
+                    $('#privContainer').removeAttr("style");
+                    $('#privContainer').attr("style", "display:none");
+                }
+            });
+        };
+
+
+         function savePrivileges() {
+        //$("#savePriv").click(function () {
+            var check = l.isLoading();
+            if (!check) {
+                var sRoleId = $("#roleId").val();
+                var sPrivileges = '';
+                var message = 'role id: ' + sRoleId + '\n';
+
+                //Loop through all checked CheckBoxes in GridView.
+                $("#privTable input[type=checkbox]:checked").each(function () {
+                    var row = $(this).closest("tr")[0];
+                    sPrivileges += row.cells[0].innerHTML + '-';
+                });
+                sPrivileges = sPrivileges.substr(0, sPrivileges.length - 1);
+                //Display selected Row data in Alert Box.
+                var PostBackURL = '/AppRoles/SavePrivileges';
+
+                $.ajax({
+                    type: "GET",
+                    url: PostBackURL,
+                    data: { 'sRoleId': sRoleId, "sPrivileges": sPrivileges },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    complete: function (response) {
+                        if (response.status == 200) {
+                            alert(response.responseText);
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        };
+
+
+        //----------------------GET POPUP FOR REF ADDNEW---------------------------
+        function newRole() {
+            $('#RoleModal').modal('show');
+        }
+
+        //-------------POST New Role Addition----------------------
+
+        $('#saveRole').on('click', function /*saveRole*/() {
+            
+            var check = s.isLoading();
+            if (!check) {
+                var Role = $('#txtRoleName').val() //new Object();
+                var btn = document.getElementById("saveRole");
+                var $btnsave = $(btn);
+                console.log("button dom = " + btn + "jquery button = " + $btnsave);
+                //alert(Role);
+                if (Role != null) {
+                    $.ajax({
+                        type: "GET",
+                        url: '/AppRoles/SaveNewRole',
+                        data: { "sRoleName": Role },
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        complete: function (response) {
+                            
+                            if (response.status == 200) {
+                                alert("Role created successfully");
+                                location.reload();
+                            }
+                            else
+                                alert(response.statusText + " " + response.status);
+                        }
+                    });
+                }
+            }
+        });
+
+    </script>
+}
+

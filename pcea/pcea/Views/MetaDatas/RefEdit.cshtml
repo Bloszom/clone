@@ -1,0 +1,57 @@
+﻿@model pcea.Models.MetaDataRef
+
+
+    <dl class="row">
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.MetaDataType)
+        </dt>
+        <dd class="col-sm-9" id="metaType" style="width:10px">
+            @Html.DisplayFor(model => model.MetaDataType)
+        </dd>
+        <dt class="col-sm-3 mt-2" >
+            @Html.DisplayNameFor(model => model.ReferenceId)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.TextBoxFor(model => model.ReferenceId, new { @class="form-control", @placeholder="Enter Field Description", @id = "refId" })
+        </dd>
+    </dl>
+<div class="row">
+    <div class="col-md-12 ladda-progress-demo">
+        <input asp-for="RecId" hidden />
+        <a value="Save" class="btn btn-lg btn-block btn-primary text-white ladda-button" id="btnEditRef">Save</a>
+    </div>
+</div>
+
+
+<script>
+    //-------------POST Status Changes----------------------
+    $(function () {
+        $("#btnEditRef").click(function () {
+            var metaref = new Object();
+            metaref.MetaType = document.getElementById("metaType").innerHTML.trim();
+            metaref.RefId = $('#refId').val();
+            metaref.RecId = $('#RecId').val();
+            if (metaref != null) {
+                $.ajax({
+                    type: "GET",
+                    url: "/MetaDatas/EditRef",
+                    data: { "sMetaType": metaref.MetaType, "sRefId": metaref.RefId, "sRecId": metaref.RecId },
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    complete: function (response) {
+
+                        if (response.status == "error") {
+                            alert("Record edit Unsuccessful...Contact administrator!");
+                            location.reload();
+                        }
+                        else {
+                            $('#RefModalNew').modal('hide');
+                            alert("Record edited Successfully");
+                            location.reload();
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>

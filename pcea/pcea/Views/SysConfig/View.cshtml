@@ -1,0 +1,84 @@
+﻿@model IEnumerable<pcea.Models.SystemConfig>
+
+@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>View</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.SsoAppHost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SsoAppHostProfile)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DocumentPath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ImagePath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TariffReviewBase)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SurveyReviewBase)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OthersReviewBase)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskClosureAccount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Secretary)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SsoAppHost)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SsoAppHostProfile)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DocumentPath)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ImagePath)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TariffReviewBase)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SurveyReviewBase)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OthersReviewBase)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskClosureAccount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Secretary)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.RecId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.RecId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.RecId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,362 @@
+﻿@model IEnumerable<pcea.Models.WorkflowManager>
+
+@{
+    ViewData["Title"] = "List of Assigned Tasks";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+    //var list = ViewData["reassignList"];
+    var list = ViewBag.reassignList as List<WorkflowManager>;
+
+    var length = list.Count;
+}
+
+
+<div class="row">
+    <div class="col-lg-11">
+        <div class="pull-right mb-2">
+            <a href="javascript: showAssignTasks()" class="btn btn-sm btn-primary">Reassign Tasks</a>
+        </div>
+        @*        <div class="pull-left mb-2">
+        <select class="form-control" id="filter">
+        <option value="YES">Completed</option>
+        <option value="NO">Pending</option>
+        </select>
+        </div>*@
+        <div class="table-responsive p-0 text-small">
+
+            <table class="table table-hover" id="indexDataTableBasic">
+                <thead>
+                    <tr>
+                        @*<th>
+                        <input type="checkbox" id="selectAll" />
+                        </th>*@
+                        <th>
+                            @Html.DisplayNameFor(model => model.TaskType)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.ProcessId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.ReferenceNo)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.OperatorName)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.DateAssigned)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.ActionId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.ActionUrl)
+                        </th>
+                        @*<th>
+                        @Html.DisplayNameFor(model => model.UserId)
+                        </th>*@
+                        <th>
+                            @Html.DisplayNameFor(model => model.RoleId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Remarks)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.DateCompleted)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.CompletionFlag)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+
+                        <tr>
+                            @*<td>
+                        </td>*@
+                            <td>
+                                @Html.DisplayFor(modelItem => item.TaskType)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ProcessId)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ReferenceNo)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.OperatorName)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.DateAssigned)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.ActionId)
+                            </td>
+                            <td>
+                                @if (item.CompletionFlag.ToUpper() == "YES")
+                                {
+                                    <small>Not available</small>
+                                }
+                                else
+                                {
+                                    <a href="@item.ActionUrl" class="text-danger"><small>Click here to open Task</small></a>
+                                }
+                            </td>
+                            @*<td>
+                        @Html.DisplayFor(modelItem => item.UserId)
+                        </td>*@
+                            <td>
+                                @Html.DisplayFor(modelItem => item.RoleId)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Remarks)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.DateCompleted)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.CompletionFlag)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Workflow/Tasks Management -->
+<div class="modal fade" id="modalAssignTasks">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Workflow Manager</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            @*<div id="taskManagerLoader" class="modal-body task-loader">
+            <div class="text-center"><img src="~/img/loading.gif" /></div>
+            </div>*@
+            <div id="assignTaskBody" class="modal-body task-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="indexDataTableAdv">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="custom-checkbox" id="selectAll" value="true" />
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.TaskType)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.ProcessId)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.UserId)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.OperatorName)
+                                </th>
+                                <th>
+                                    @Html.DisplayNameFor(model => model.DateAssigned)
+                                </th>
+                                @*<th>
+                                @Html.DisplayNameFor(model => model.ActionId)
+                                </th>*@
+                                @*<th>
+                                @Html.DisplayNameFor(model => model.ActionUrl)
+                                </th>*@
+                                @*<th>
+                                @Html.DisplayNameFor(model => model.UserId)
+                                </th>*@
+                                @*<th>
+                                @Html.DisplayNameFor(model => model.RoleId)
+                                </th>
+                                <th>
+                                @Html.DisplayNameFor(model => model.Remarks)
+                                </th>
+                                <th>
+                                @Html.DisplayNameFor(model => model.DateCompleted)
+                                </th>
+                                <th>
+                                @Html.DisplayNameFor(model => model.CompletionFlag)
+                                </th>*@
+                            </tr>
+                        </thead>
+                        <tbody class="task-table-body">
+                            @foreach (WorkflowManager item in list)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" class="Id" value="@item.TaskId" />
+                                    </td>
+                                    <td>
+                                        @item.TaskType
+                                        @*@Html.DisplayFor(modelItem => item.TaskType)*@
+                                    </td>
+                                    <td>
+                                        @item.ProcessId
+                                        @*@Html.DisplayFor(modelItem => item.ProcessId)*@
+                                    </td>
+                                    <td>
+                                        @item.UserId
+                                        @*@Html.DisplayFor(modelItem => item)*@
+                                    </td>
+                                    <td>
+                                        @item.OperatorName
+                                        @*@Html.DisplayFor(modelItem => item.OperatorName)*@
+                                    </td>
+                                    <td>
+                                        @item.DateAssigned
+                                        @*@Html.DisplayFor(modelItem => item.DateAssigned)*@
+                                    </td>
+                                    @*<td>
+                                @Html.DisplayFor(modelItem => item.ActionId)
+                                </td>*@
+                                    @*<td>
+                                @if (item.CompletionFlag.ToUpper() == "YES")
+                                {
+                                <small>Not available</small>
+                                }
+                                else
+                                {
+                                <a href="@item.ActionUrl" class="text-danger"><small>Click here to open Task</small></a>
+                                }
+                                </td>*@
+                                    @*<td>
+                                @Html.DisplayFor(modelItem => item.UserId)
+                                </td>*@
+                                    @*<td>
+                                @Html.DisplayFor(modelItem => item.RoleId)
+                                </td>
+                                <td>
+                                @Html.DisplayFor(modelItem => item.Remarks)
+                                </td>
+                                <td>
+                                @Html.DisplayFor(modelItem => item.DateCompleted)
+                                </td>
+                                <td>
+                                @Html.DisplayFor(modelItem => item.CompletionFlag)
+                                </td>*@
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class=" text-center w-100 mt-2">
+                    <div id="taskManagerLoader" style="display: none" class="modal-body task-loader">
+                        <div class="text-center"><img src="~/img/loading.gif" /></div>
+                    </div>
+
+                    @if (length > 0)
+                    {
+                        <form id="taskFrm" asp-controller="Workflows" asp-action="BulkAssign" method="post">
+                            <div class="row">
+                                <div class="col-sm-2 text-small text-nowrap">
+                                    <label> ForwardTo</label>
+                                </div>
+
+                                <div class="col-sm-9 mb-3  align-self-center position-static">
+                                    @{
+                                        if (ViewData["UserList"] != null)
+                                        {
+                                            WorkflowManager userList = (WorkflowManager)ViewData["UserList"];
+                                            <select name="UserId" class="form-control">
+                                                @if (ViewData["UserList"] != null)
+                                                {
+                                                    foreach (SelectListItem item in userList.UserList)
+                                                    {
+                                                        <option value="@item.Value">@item.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        }
+                                    }
+                                </div>
+                                <div class="col-sm-2 text-small text-nowrap">
+                                    <label>Remarks</label>
+                                </div>
+                                <div class="col-sm-9 mb-3 align-self-center position-static">
+                                    <textarea rows="3" name="Remarks" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                        <button id="bulkAssignBtn" type="button" class="btn col-12 btn-primary position-static"> Assign Selected Tasks</button>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Workflow/Tasks Management /-->
+
+<script>
+    function showAssignTasks() {
+        $('#modalAssignTasks').modal('show');
+    }
+</script>
+@section scripts{
+
+    <script>
+        $().ready(function() {
+
+            var $select = $('#selectAll');
+            var trs = $('tbody.task-table-body tr');
+
+            //controls the checkbox deselecting
+            dtAdv.on('deselect', function() {
+                var check2 = $select.is(':checked');
+                if (check2)
+                    $select.prop('checked', false);
+            });
+
+            //checkbox function for selecting all tasks
+            $select.on('change', function() {
+                var check = $(this).is(':checked');
+                check ? dtAdv.rows().select() : dtAdv.rows().deselect()
+            });
+
+            $("#filter").on('change', function() {
+                var id = $(this).val();
+
+                $.ajax({
+                    type: "GET",
+                    url: "/WorkFlows/TaskList2",
+                    data: { "filter": id },
+                    dataType: "json",
+                    success: function(response) {
+                        $('#ModalWorkflow').modal('hide');
+                        //window.location.reload();
+                        alert(response + "Record edited Successfully");
+                    },
+                    complete: function(response) {
+                        if (response.statusCode == 200) {
+                            console.log(response);
+                        }
+                    }
+                });
+            });
+
+            $('#bulkAssignBtn').click(function() {
+                var frm = $('#taskFrm');
+                var loader = $('#taskManagerLoader');
+                loader.removeAttr("style");
+                loader.attr("style", "display: normal");
+
+                frm.hide();
+
+                var ids = [];
+                var inputs = $('tbody tr.selected').find('td input');
+                for (var id of inputs) {
+                    ids.push($(id).val());
+                }
+                frm.append('<input type="hidden" name="taskIds" value="' + ids + '"/>');
+                frm.submit();
+            });
+        });
+
+    </script>
+}

@@ -1,0 +1,156 @@
+﻿
+@{
+    ViewData["Title"] = "Survey Report";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Css{ 
+
+<style>
+    table.dataTable {
+        border-collapse: collapse !important;
+    }
+</style>
+}
+
+    <div class="row">
+        <label class="text-light text-center bg-danger w-100 err mb-3"></label>
+
+        <div class="col-md-12 col-sm-12">
+            <div class="form-inline mb-2">
+                <i class="fa fa-file fa-2x text-gray"></i> &nbsp;
+                @Html.DropDownList("Forms", (SelectList)ViewBag.FormList, "Select a Form", new { @class = "form-control", @id = "formList" })
+                @*@Html.DropDownList("Report", (SelectList)ViewBag.SurveyList, "Select a Report type", new { @class = "form-control display-none", @id = "surveyList" })*@
+                <select class="form-control" disabled id="surveyList">
+                    <option>-----------------</option>
+                </select>
+                @*&nbsp;
+        &nbsp;
+        Date (From):
+        @Html.TextBox("DateFrom", null, new { @class = "form-control", @type = "date" }) &nbsp;
+        Date (To):
+        @Html.TextBox("DateTo", null, new { @class = "form-control", @type = "date" })  &nbsp;*@
+                <button id="btnLoad" class="btn btn-secondary " type="button">Load <i class="fa fa-angle-double-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+<div id="tab" class="bg-white overflow-auto">
+
+</div>
+
+
+@section Scripts{
+    <script src="~/js/jquery.table2excel.js"></script>
+    <script type="text/javascript">
+
+        $('#Report').change(function () {
+            $('#DateFrom').val("");
+            $('#DateTo').val("");
+        });
+
+        $('#btnLoad').click(function () {
+            debugger;
+
+            var rptType = $('#surveyList').val();
+            var form = $('#formList').val();
+            if (rptType != null && form != null && rptType != "" && form != "") {
+                var fa = $(this).find('i');
+                fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                $.ajax({
+                    url: "/Report/SurveyReportData",
+                    type: "POST",
+                    data: { "reportId": rptType, "formId": form, "from": $('#DateFrom').val(), "to": $('#DateTo').val() },
+                    dataType: 'json',
+                    success: function (response) {
+                        debugger;
+
+                        $('#tab').html("");
+                        $('#tab').append(response);
+                        fa.attr('class', 'fa fa-angle-double-right');
+                        initializeDataTable();
+                        $('#indexDataTable').on('responsive-display', function (e, datatable, row, showHide, update) {
+                            showHide = true;
+                            console.log('Details for row ' + row.index() + ' ' + (showHide ? 'shown' : 'hidden'));
+                        });
+                    },
+                    error: function (err) {
+                        debugger;
+                        console.log("error:" + err);
+                        fa.attr('class', 'fa fa-angle-double-right');
+
+                        if (err.getResponseHeader('content-type').indexOf('text/html') !== -1) {
+                            // Display the HTML error page
+                            $('body').html(err.responseText);
+                        }
+                    }
+                });
+            } else {
+                $(".err").html("Please select a report and form!").fadeIn(300).fadeOut(9000);
+            }
+
+        });
+
+        $('#formList').change(function () {
+
+            debugger;
+            var rpt = $('#surveyList');
+            var frmId = $(this).val();
+            var fa = $(this).siblings('i');
+            fa.attr('class', 'fa fa-gear fa-2x fa-spin text-danger');
+            
+            var attributes = rpt.attr('disabled');
+            console.log(fa);
+            if (rpt.children != null && attributes == undefined) {
+                fa.attr('class', 'fa fa-file fa-2x text-gray');
+
+                rpt.find('option').remove();
+                rpt.prop('disabled', true);
+                $('<option>---------------</option>').appendTo(rpt);
+            }
+
+            if (frmId != null) {
+                $.ajax({
+                    type: 'get',
+                    url: '/Report/GetReportsByFrmId',
+                    dataType: 'json',
+                    data: { "id": frmId },
+                    success: function (response) {
+                        debugger;
+                        if (response != "" || response != null) {
+                            fa.attr('class', 'fa fa-file fa-2x text-gray').fadeIn(2000);
+                            rpt.find('option').text("Select a Report");
+
+                            rpt.removeAttr("disabled");
+
+                            $.each($(response), function (key, value) {
+                                $('<option value="' + value.value + '">' + value.text + '</option>').appendTo(rpt);
+                            });
+                        }
+
+                    },
+                    error: function (response) {
+                        fa.attr('class', 'fa fa-file fa-2x text-gray').fadeIn(2000);
+
+                        if (response.getResponseHeader('content-type').indexOf('text/html') !== -1) {
+                            debugger;
+                            // Display the HTML error page
+                            $('body').html(response.responseText);
+                        }
+
+                    }
+                })
+            }
+        })
+
+        $(document).on('click', '#btnExport', function () {
+            var title = $('#surveyList :selected').text();
+            $("#indexDataTableBasic").table2excel({
+                name: "Survey Report - " + title,
+                filename: title,//do not include extension
+                fileext: ".xls" // file extension
+            });
+        });
+
+    </script>
+}

@@ -1,0 +1,447 @@
+﻿@model Reports
+
+@{
+    ViewData["Title"] = "Create / Edit Report";
+
+    SelectList RptClm = new SelectList(new List<object> {
+        new { value = "monthly", text = "Monthly" },
+        new { value = "quarterly", text = "Quarterly" },
+        new { value = "yearly", text = "Yearly" },
+        new { value = "operator", text = "Operator" },
+        new { value = "operator_type", text = "Operator Type" }
+    }, "value", "text");
+
+    SelectList RptRow = new SelectList(new List<object> {
+        new { value = "operator", text = "Operator" },
+        new { value = "operator_type", text = "Operator Type" },
+        new { value = "custom", text = "Custom" }
+    }, "value", "text");
+    
+}
+@section Css{
+    <style>
+        /*#rptCategory {
+            display: none;
+        }*/
+
+        #filter:hover {
+            color: white;
+            cursor: pointer;
+            background-color: midnightblue
+        }
+
+        .ms-container ul li {
+            white-space: nowrap;
+            overflow: hidden;
+            border-bottom: 1px solid #D0D0D0;
+        }
+    </style>
+}
+@if (ViewBag.error != null || TempData["error"] != null)
+{
+    string err = ViewBag.error == null ? TempData["error"] : ViewBag.error;
+    <div class="p-2 small text-center text-danger">@err</div>
+}
+
+<div class="bg-white p-3 mb-2">
+    @using (Html.BeginForm(FormMethod.Post,new { id = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.RecId)
+        <div class="row">
+            <div class="col-md-7 text-gray">
+                <h3 class="text-gray mb-4"><i class="fa fa-check-square-o"></i> Analysis For Migrating Report</h3>
+
+                <div class="form-group">
+                    <small class="text-uppercase">Surveys affected by this report</small>
+                    <div class="input-group">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <i class="fa fa-file"></i>
+                            </div>
+                        </div>
+                        @Html.DropDownList("Surveys", (SelectList)ViewBag.surveyList, "Select a survey", new { @class = "form-control" })
+                    </div>
+                </div>
+                @*<small>Fields...</small>*@
+                
+
+            <div class="form-group" id="selBody">
+                <small class="text-uppercase">Filter survey fields</small>
+                <div class="input-group">
+                    <input class="form-control" id="search" placeholder="Filter Fields" />
+                    <div class="input-group-append input-group-btn">
+                        <div class="input-group-text" id="filter">
+                            <i class="fa fa-filter"></i>
+                        </div>
+                    </div>
+                </div>
+                <select id="selFields" multiple="multiple">
+                </select>
+            </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        @Html.LabelFor(m => m.AnalysisFields, "Analytic Fields", new { @class = "small mb-0 text-uppercase" })
+                        @Html.TextAreaFor(m => m.AnalysisFields, new { @placeholder = "", @class = "form-control small", @readonly = "readonly", @rows = "4" })
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <small class="text-uppercase">Computing Final Value</small>
+                        <div class="border p-1 pb-3">
+                            @Html.DropDownListFor(m => m.AnalysisAggregator, (SelectList)ViewBag.aggregator, "", new { @class = "border-0 small form-control" })
+
+                            <label class="pl-3"> value(s) of field(s) </label>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-info">
+                    <strong>NOTE:</strong><br />
+                    <small>
+                        Data migration will be done based on the analytic settings you inputed here.
+                        Ensure the select query is accurate to view your report and chart correctly.
+                    </small>
+                </p>
+            </div>
+            <div class="col-md-5 text-dark">
+                <h3 class="mb-4"><i class="fa fa-area-chart"></i> Report View</h3>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Category, "Category", new { @class = "small mb-0" })
+                    <div class="input-group">
+                        @Html.DropDownListFor(m => m.Category, new SelectList(ViewBag.categoryList, "RecId", "Title"), "Select category of report", new { @class = "form-control" })
+                        <span class="input-group-append">
+                            <a class="btn btn-default" id="addCatg" href="#" data-toggle="modal" data-target="#categoryUpdate">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ReportName, "Name of Report", new { @class = "small mb-0" })
+                    @Html.TextBoxFor(m => m.ReportName, new { @placeholder = "Name of Report", @class = "form-control", @required = "required" })
+                </div>
+                <strong class="small text-uppercase">Tabulate Report</strong>
+                <div class="row form-group">
+                    <div class="col-sm-4">
+                        @Html.LabelFor(m => m.ReportColumnType, "X axis (Columns):", new { @class = "small mb-0" })
+                        @Html.DropDownListFor(m => m.ReportColumnType, RptClm, "- Select X Axis -", new { @class = "form-control clm" })
+                    </div>
+                    <div class="col-sm-8 cls">
+                        @Html.LabelFor(m => m.ReportColumnName, "Details:", new { @class = "small mb-0" })
+                        @Html.TextBoxFor(m => m.ReportColumnName, new { @placeholder = "[ ]", @class = "form-control small" })
+                        
+                        <div class="border p-1 border-top-0 small" id="dvColor">
+                            <input type="color" class="border-0" placeholder="First" value="#F0F0F0" />
+                        </div>
+                        @Html.HiddenFor(m => m.ColumnColor)
+                    </div>
+
+                    <div class="col-sm-4">
+                        @Html.LabelFor(m => m.ReportRowType, "Y Axis (Rows):", new { @class = "small mb-0" })
+                        @Html.DropDownListFor(m => m.ReportRowType, RptRow, "- Select Y Axis -", new { @class = "form-control rws" })
+                    </div>
+                    <div class="col-sm-8">
+                        @Html.LabelFor(m => m.ReportRowName, "Details:", new { @class = "small mb-0" })
+                        @Html.TextBoxFor(m => m.ReportRowName, new { @placeholder = "[ ]", @class = "form-control small" })
+                    </div>
+                </div>
+
+                @*<div class="form-group">
+                    @Html.LabelFor(m => m.ReportQuery, "Build Query", new { @class = "small mb-0" })
+                    @Html.TextAreaFor(m => m.ReportQuery, new { @placeholder = "", @class = "form-control small", @readonly = "readonly" })
+                </div>*@
+                <div class="row">
+                    <div class="col-sm-9 form-group">
+                        @Html.LabelFor(m => m.ChartType, "Chart", new { @class = "small mb-0" })
+                        @Html.DropDownListFor(m => m.ChartType, (SelectList)ViewBag.chartList, "Select type of Chart", new { @class = "form-control" })
+                        @*@Html.TextBoxFor(m => m.ReportName, new { @placeholder = "", @class = "form-control" })*@
+                    </div>
+                    <div class="col-sm-3 text-success form-group p-1">
+                        <i id="chart-fa" class="fa fa-bar-chart fa-4x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-right mt-2 border-top pt-2">
+            <button class="btn btn-primary btn-sm chart" id="btnSave" type="submit">
+                <i class="fa fa-save"></i> Save Report
+            </button>
+            <button class="btn btn-secondary btn-sm" type="reset"><i class="fa fa-times"></i> Clear</button>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="categoryUpdate" tabindex="-1" role="dialog" aria-labelledby="categoryUpdate" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <form action="AddCategory" method="post" class="modal-content" id="ReportCategory">
+            <div class="modal-header">
+                <span class="text-uppercase">Update Report Categories</span>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            @Html.AntiForgeryToken()
+            @Html.Hidden("RecId")
+
+        <div class="modal-body small">
+            <div class="border p-2">
+                <div class="form-group">
+                    <div class="form-group">
+                        <small>Title</small>
+                        <input type="text" id="Title" name="Title" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <small>Description</small>
+                        <textarea id="Description" name="Description" class="form-control"></textarea>
+                    </div>
+                    <div class="text-right form-group">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="rptCategory" class="table-responsive bg-white">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="25%">Title</th>
+                            <th width="70%">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.category != null)
+                        {
+                            var i = 0;
+                            foreach (var item in ViewBag.category)
+                            {
+                                i++;
+                                <tr>
+                                    <td>@i</td>
+                                    <td>
+                                        <a href="#" class="itm" data-target="#categoryUpdate" data-title="@item.Title" data-desc="@item.Description" data-id="@item.RecId">
+                                            @item.Title
+                                        </a>
+                                    </td>
+                                    <td class="text-wrap">@item.Description</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3">
+                                    <h4 class="font-weight-light text-center">-</h4>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+        </form>
+    </div>
+</div>
+@section Scripts{
+    <script src="~/assets/vendor/multiselect/js/jquery.multi-select.js"></script>
+
+    <script type="text/javascript">
+        $().ready(function () {
+            var form = $('#form');
+            var years = '2020,2019,2018';
+            form.append('<input id="customY" type="hidden"/>');
+
+            $('.itm').click(function () {
+                $('#ReportCategory #Title').val($(this).attr("data-title"));
+                $('#ReportCategory #Description').val($(this).attr("data-desc"));
+                $('#ReportCategory #RecId').val($(this).attr("data-id"));
+            });
+
+            $('.colr').change(function (e) {
+                alert($(this).val());
+            });
+            var opr = '@ViewBag.operators', oprType = '';
+
+            $('#addCatg').click(function clr() {
+                $('#ReportCategory #Title').val('');
+                $('#ReportCategory #Description').val('');
+                $('#ReportCategory #RecId').val('');
+            });
+
+            $('#ChartType').change(function () {
+                showChart();
+            });
+
+            function showChart() {
+                $('#chart-fa').attr('class', '').addClass('fa fa-' + ($('#ChartType').val() == '' ? 'bar' : $('#ChartType').val()) + '-chart fa-4x');
+            }
+
+            $('#selFields').multiSelect({
+                enable_search: true,
+                search_placeholder: "Search...",
+                selectableHeader: '<small class="text-uppercase text-gray">Survey</small>',
+                selectionHeader: '<small class="text-uppercase text-gray">Selected Fields</small>'
+            });
+
+            $('#filter').on('click', function () {
+                var value = $('#search').val();
+                //var value = $(this).val().toLowerCase();
+                $("#selFields *").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+
+                $('#selFields').multiSelect('refresh');
+            })
+
+            //var select = document.getElementById("selFields");
+
+            //$('#selFields').multiSelect({
+            //    enable_search: true,
+            //    search_placeholder: "Search...",
+            //    selectableHeader: '<small class="text-uppercase text-gray">Survey</small>',
+            //    selectionHeader: '<small class="text-uppercase text-gray">Selected Fields</small>'
+            //});
+
+            $('#selBody').on('click', '.ms-selectable li, .ms-selection li', function () {
+                try {
+                    var fds = [];
+                    $('#selBody .ms-selection ul li').each(function (i, v) {
+                        if ($(v).is(':visible')) fds.push($(v).find('span').html());
+                    });
+                    $('#AnalysisFields').val($('#Surveys').val() + ':' + JSON.stringify(Object.assign({}, fds)));
+                } catch (e) {
+                    alert(e);
+                }
+            });
+            
+            $('#Surveys').change(function () {
+                var fa = $(this).parent().find('i');
+                fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                try {
+                    $('#selFields').empty();
+                    $.ajax({
+                        url: "/Report/ListFormFields",
+                        type: "POST",
+                        data: { "entry": $(this).val() },
+                        dataType: 'json',
+                        success: function (response) {
+                            //console.log(response.fields);
+                            populate(response);
+                            $('#selFields').multiSelect('refresh');
+                            fa.attr('class', 'fa fa-file');
+                        },
+                        error: function (err) {
+                            //console.log("error:" + err);
+                            fa.attr('class', 'fa fa-file');
+                        }
+                    });
+                } catch (e) {
+                    //console.log("FATAL ERROR - " + e);
+                    fa.attr('class', 'fa fa-file');
+                }
+            });
+
+            load();
+
+            function load() {
+                var survs = $('#Surveys');
+                if (survs[0].selectedIndex > 0) {
+                    var fa = survs.parent().find('i');
+                    fa.attr('class', 'fa fa-gear fa-spin text-danger');
+
+                    try {
+                        $('#selFields').empty();
+                        $.ajax({
+                            url: "/Report/ListFormFields",
+                            type: "POST",
+                            data: { "entry": survs.val() },
+                            dataType: 'json',
+                            success: function (response) {
+                                //console.log(response.fields);
+                                populate(response);
+                                $('#selFields').multiSelect('refresh');
+                                fa.attr('class', 'fa fa-file');
+                            },
+                            error: function (err) {
+                                //console.log("error:" + err);
+                                fa.attr('class', 'fa fa-file');
+                            }
+                        });
+                    } catch (e) {
+                        //console.log("FATAL ERROR - " + e);
+                        fa.attr('class', 'fa fa-file');
+                    }
+                }
+            }
+
+            function populate(response) {
+                $.each(response.fields, function (i, v) {
+                    var vl = v.replace(/(<([^>]+)>)/gi, "");
+                    vl = vl.replace('&nbsp;', ' ').replace('&amp;', '&');
+                    $('#selFields').append($('<option>', { value: vl + ' »' + i, text: vl + ' »' + i }).attr('title', vl + ' »' + i));
+                });
+
+                $("#selFields").html($("#selFields option").sort(function (a, b) {
+                    return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+                }))
+
+                opr = response.operators;
+                years = response.years;
+            };
+
+            $('#ReportColumnType, #ReportRowType').change(function () {
+                var txt = $(this).val();
+                var frmyr = years.split(",")[0];
+                var shrtyr = frmyr.substring(frmyr.length - 2);
+
+                var yaxis = $(form).find('#customY');
+                if (txt == 'monthly') {
+                    //all the months of thte year
+                    $('#ReportColumnName').val("jan'"+shrtyr+",feb'"+shrtyr+",mar'"+shrtyr+",apr'"+shrtyr+",may'"+shrtyr+",jun'"+shrtyr+",jul'"+shrtyr+",aug'"+shrtyr+",sept'"+shrtyr+",oct'"+shrtyr+",nov'"+shrtyr+",dec'"+shrtyr);
+                } else if (txt == 'yearly') {
+                    //pick current year + 2 previous years
+                    $('#ReportColumnName').val(years);
+                } else if (txt == 'quarterly') {
+                    //(quarter)-(current year)
+                    $('#ReportColumnName').val('Q4-'+frmyr+',Q3-'+frmyr+',Q2-'+frmyr+',Q1'+frmyr);
+                } else if (txt == 'operator') {
+                    if ($(this).hasClass('rws')) $('#ReportRowName').val(opr); else $('#ReportColumnName').val(opr);
+                    yaxis.val(false);
+                } else if (txt == 'operator_type') {
+                    if ($(this).hasClass('rws')) $('#ReportRowName').val('type: ' + opr); else $('#ReportColumnName').val(opr);
+                    yaxis.val(false);
+                } else if (txt == 'custom') {
+                    $('#ReportRowName').val('[No Of Subscription]');
+                    yaxis.val(true);
+                }
+                setColor();
+            });
+
+            function setColor() {
+                try {
+                    var cls = [], strCls = [], cPrev = $('#ColumnColor').val().split(",");
+                    $.each($('#ReportColumnName').val().split(","), function (i) {
+                        var cl = i > 9 ? '#F0' + i + 'B5' : '#5F0' + i + 'B5';
+                        cl = (cPrev && cPrev[i]) ? cPrev[i] : cl;
+                        cls.push('<input id="_c'+i+'" type="color" class="border-0" placeholder="First" value="' + cl + '" />');
+                        strCls.push(cl);
+                    });
+                    $('#dvColor').html(cls.join());
+                    $('#ColumnColor').val(strCls.join());
+                } catch (e) {
+                    alert(e);
+                }
+            }
+            $('.cls').on('change', 'input[type=color]', function (e) {
+                var nClr = $('#ColumnColor').val().split(",");
+                nClr[$(this).attr('id').substr(2)] = $(this).val();
+                $('#ColumnColor').val(nClr.join());
+            })
+            $('#ReportColumnName').on('input propertychange paste', function () {
+                setColor()
+            });
+
+            if ($('#ReportColumnName').val().trim() != '') setColor();
+
+            showChart();
+        });
+    </script>
+}

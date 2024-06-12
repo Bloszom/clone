@@ -1,0 +1,187 @@
+﻿
+@model IEnumerable<MailMessage>
+
+@section Css {
+    <style>
+        #dvForm, #frmReset {
+            display: none;
+        }
+
+            #frmReset button {
+                /*font-size: medium;*/
+            }
+
+        .lbl {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+
+        .no-edit {
+            pointer-events: none;
+        }
+    </style>
+}
+
+@{
+    ViewData["Title"] = ViewBag.title;
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
+            <div class="form-inline mb-2">
+                <i class="fa fa-filter fa-2x text-gray visible-md"></i> &nbsp; &nbsp;
+                <input class="form-control search" name="search" type="text" placeholder="Search" />
+                &nbsp;
+                <button class="btn btn-default btn-search"><i class="fa fa-search text-gray"></i>Search</button>
+            </div>
+        </div>
+    </div>
+
+}
+
+
+@if (ViewBag.error != null || TempData["error"] != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+    <div class="small text-center bg-danger text-white w-75 m-auto p-2 mb-1">@err</div>
+}
+@if (ViewBag.message != null || TempData["message"] != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+    <div class="small text-center bg-success text-white w-75 m-auto p-2 mb-1">@msg</div>
+}
+
+
+<div id="dvForm" class="border p-3 bg-white mb-2" style="position:relative;">
+
+    <button class="text-danger close right" type="button" data-dismiss="modal" aria-label="Close"><i class="fa fa-close"></i></button>
+
+
+    <form id="dvResponse">
+    </form>
+    <span class="clearfix">&nbsp;</span>
+</div>
+
+
+
+<div class="table-responsive bg-white">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="border-top-0">
+                    <span class="text-dark text-uppercase"><i class="fa fa-file"></i> Notifications</span>
+                </th>
+                <th class="border-top-0 text-right">
+                    <i class="fa fa-mouse-pointer"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                var i = 0;
+                @foreach (var item in Model)
+                {
+                    i++;
+                    <tr class="itm">
+                        <td class="">
+                            @item.ReferenceNo
+                        </td>
+                        <td class="">
+                            @item.MailType
+                        </td>
+                        <td class="">
+                            @item.DateCreated.ToShortDateString()
+                        </td>
+                        <td class="">
+                            <a href="#" id="@item.RecId" data-type="@item.MailType" class="btn btn-outline-primary btn-sm type" data-toggle="modal" data-html="@item.MailBody">
+                                <i class="fa fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+                if (i == 0)
+                {
+                    <tr>
+                        <td colspan="10">
+                            <h4 class="font-weight-light text-center small">No Data Found</h4>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td class="px-0" colspan="2"><h4 class="text-center">No Data</h4></td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+
+
+@section Scripts{
+
+    <script type="text/javascript">
+
+        jQuery(function ($) {
+
+
+            var mForm = $('#dvResponse');
+
+            $('.itm a').click(function () {
+                try {
+                    var i = $(this).find('i');
+                    i.attr('class', 'fa fa-gear fa-spin');
+                    var data = $(this).data('html');
+                    $('#dvResponse').html(data);
+                    $('#dvForm').slideDown('slow');
+                    $('#dvResponse').removeClass('no-edit'); scrollTop(i);
+                } catch (e) {
+                    alert(e);
+                    scrollTop(i);
+                }
+            });
+
+            $('.btn-search').click(function () {
+                if ($('.search').val() == '') {
+                        $('.itm').show('slow');
+                    } else {
+                        $('.itm').hide();
+                        $('.itm').each(function () {
+                            if ($(this).find('td').eq(0).text().toLowerCase().indexOf($('.search').val().toLowerCase()) > -1) $(this).show(); else $(this).hide();
+                        });
+                    }
+            });
+
+
+            function scrollTop(i) {
+                try {
+                    $("html, body").animate({ scrollTop: 0 }, "slow");
+                } catch (e) {
+                    window.scrollTo(0, 0);
+                }
+                i.attr('class', 'fa fa-eye');
+            }
+
+            $('.close').click(function () {
+                $('#dvForm').slideUp('slow');
+                mForm.empty(); 
+            })
+
+            $('.ftypes').change(function () {
+                if ($(this).val() == '') {
+                    $('.itm').show('slow');
+                } else {
+                    $('.itm').hide();
+                    var cls = "_" + $(this).val().toLowerCase().replace(' ', '_');
+                    $('.' + cls).show('slow');
+                }
+            });
+
+
+        });
+    </script>
+}
+

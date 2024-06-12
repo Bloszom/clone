@@ -1,0 +1,260 @@
+﻿@model IEnumerable<pcea.Models.AppUserProfileViewV2>
+
+@{
+    ViewData["Title"] = "User Manager";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-10" id="divInvite" style="display: none">
+        <a href="javascript:showInvite()" id="hrefInvite"><i class="fi fi-person"></i>&nbsp;Click here to invite New User</a>
+        <a href="javascript:hideInvite()" class="btn btn-sm btn-outline-danger" id="hrefInviteClose" style="display: none"><i class="fi fi-close"></i>&nbsp;Close Invite</a>
+        <div class="row">
+            <div class="col-lg-4 form-group-sm">
+                <small>User Email</small>
+                <input type="text" class="form-control form-control-sm" id="txtEmail" />
+            </div>
+            <div class="col-lg-3 form-group-sm">
+                <small>Fullname</small>
+                <input type="text" class="form-control form-control-sm" id="txtFullname" />
+            </div>
+            <div class="col-lg-3 form-group-sm">
+                <small>Role</small>
+                @Html.DropDownList("ddlRole", new SelectList(ViewBag.RoleList, "Value", "Text"), new { @class = "form-control form-control-sm" })
+            </div>
+            <div class="col-lg-2 form-group-sm">
+                <br />
+                <a href="javascript:inviteUser();" class="btn btn-sm btn-info">
+                    <i class="ion ion-checkmark"></i>Invite
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-11">
+        <div class="table-responsive p-0 text-small">
+            <table class="table responsive table-hover" id="indexDataTable">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Fullname)
+                        </th>
+                        <th>
+                            Username
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.JobTitle)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Telephone)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Email)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.RoleId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Status)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.UserType)
+                        </th>
+                        @*<th>
+                            @Html.DisplayNameFor(model => model.DateLastLogin)
+                        </th>*@
+                        <th style="width:10%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Fullname)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Username)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.JobTitle)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Telephone)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Email)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.RoleId)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Status)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.UserType)
+                            </td>
+                            @*<td>
+                                @Html.DisplayFor(modelItem => item.DateLastLogin)
+                            </td>*@
+                            <td class="text-nowrap text-small">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <button data-toggle="dropdown" type="button" class="btn btn-sm btn-outline-primary dropdown-toggle">
+                                            Action <span class="caret"></span>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a href="javascript: changeRole('@item.UserId');" class="dropdown-item">
+                                                Change User Role
+                                            </a>
+                                            <a href="javascript: changeStatus('@item.UserId');" class="dropdown-item">
+                                                Change User Status
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@*Modal for change status*@
+<div class="modal fade" id="modalStatus">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <label class="modal-title">Change User Status</label>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalStatusContent">
+
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+@*Modal for change status*@
+<div class="modal fade" id="modalRole">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <label class="modal-title">Change User Role</label>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalRoleContent">
+
+            </div>
+            <div class="modal-footer">
+
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+
+@section scripts
+{
+    <script>
+        //----------------------CHANGE STATUS---------------------------
+        function changeStatus(userid) {
+            var PostBackURL = '/UserProfiles/GetUserStatus';
+            $('#modalStatus').modal('show');
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "UserId": userid },
+                datatype: "json",
+                success: function (data) {
+                    $('#modalStatusContent').html(data);
+                },
+                error: function () {
+                    $('#modalStatus').modal('hide');
+                    alert("Unable to retrieve user's status.  Please, try again.");
+                }
+            });
+        }
+
+
+
+        //----------------------CHANGE ROLE---------------------------
+        function changeRole(userid) {
+            var PostBackURL = '/UserProfiles/GetUserRole';
+            $('#modalRole').modal('show');
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "UserId": userid },
+                datatype: "json",
+                success: function (data) {
+                    $('#modalRoleContent').html(data);
+                },
+                error: function () {
+                    alert("Unable to retrieve user's role.  Please, try again.");
+                }
+            });
+        }
+ 
+
+        //----------------------INVITE USER---------------------------
+        function showInvite() {
+            $("#divInvite").removeAttr("style");
+            $("#divInvite").attr("style", "display:normal");
+
+            $("#hrefInvite").removeAttr("style");
+            $("#hrefInvite").attr("style", "display:none");
+
+            $("#hrefInviteClose").removeAttr("style");
+            $("#hrefInviteClose").attr("style", "display:normal");
+        }
+
+        function hideInvite() {
+            $("#divInvite").removeAttr("style");
+            $("#divInvite").attr("style", "display:none");
+
+            $("#hrefInvite").removeAttr("style");
+            $("#hrefInvite").attr("style", "display:normal");
+
+            $("#hrefInviteClose").removeAttr("style");
+            $("#hrefInviteClose").attr("style", "display:none");
+        }
+
+        function inviteUser() {
+            var PostBackURL = '/UserProfiles/InviteUser';
+            var email = $("txtEmail").val();
+            var fullname = $("txtFullname").val(); 
+            var role = $("ddlRole").val(); 
+            
+            $.ajax({
+                type: "GET",
+                url: PostBackURL,
+                contentType: "application/json; charset=utf-8",
+                data: { "Email": email, "Fullname": fullname, "RoleId": role },
+                datatype: "json",
+                success: function (data) {
+                    hideInvite();
+                    alert("Invite sent successfully.");
+                },
+                error: function () {
+                    alert("Unable to send user invite.  Please, try again.");
+                }
+            });
+        }
+    </script>
+}

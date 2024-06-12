@@ -1,0 +1,119 @@
+﻿@model pcea.Models.WorkflowManager
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <dl class="row">
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.ActionUrl)
+            </dt>
+            <dd class="col-sm-9">
+                @*@Html.DisplayFor(model => model.ActionUrl)*@
+                <a href="@Model.ActionUrl" target="_blank"> Click here to confirm if you are committing the right work page to the workflow</a>
+            </dd>
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.ProcessId)
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DropDownListFor(m => m.ProcessId, new SelectList(Model.ProcessList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "processId" })
+            </dd>
+            <dt class="col-sm-3">
+                @*@Html.DisplayNameFor(model => model.ReferenceNo)*@
+                Select Operator/NCC
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DropDownListFor(m => m.ReferenceNo, new SelectList(Model.OperatorList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "operatorId" })
+                <small class="text-danger">Select an operator if this task relates directly to one.  Otherwise, select NCC.</small>
+                @*@Html.DisplayFor(model => model.ReferenceNo)*@
+            </dd>
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.ActionId)
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DropDownListFor(m => m.ActionId, new SelectList(Model.ActionList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "userAction" })
+            </dd>
+            <dt class="col-sm-3">
+                @Html.DisplayNameFor(model => model.Remarks)
+            </dt>
+            <dd class="col-sm-9">
+                @Html.TextAreaFor(m => m.Remarks, new { @class = "form-control form-control-sm", @id = "userRemarks" })
+            </dd>
+            <dt class="col-sm-3 text-small">
+                @Html.DisplayNameFor(model => model.DestinationUserId)
+            </dt>
+            <dd class="col-sm-9">
+                @Html.DropDownListFor(m => m.DestinationUserId, new SelectList(Model.UserList, "Value", "Text"), new { @class = "form-control form-control-sm", @id = "userDestination" })
+            </dd>
+
+        </dl>
+        <div class="form-group">
+            <button class="btn btn-success btn-sm create-task pull-right" title="Create a new task and forward same to selected officer">
+                <i class="fa fa-check"></i> Create Task
+            </button>
+        </div>
+
+
+
+@*@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+}*@
+
+<script>
+    $('.create-task').click(function () {
+        //alert("here");
+        DisplayTaskManagerLoader();
+
+
+        //get input values
+        var sProcessId = $('#processId').val();
+        var sOperatorId = $('#operatorId').val();
+        var sUserAction = $('#userAction').val();
+        var sUserRemarks = $('#userRemarks').val();
+        var sDestUserId = $('#userDestination').val();
+        var sCurrentUrl = window.location.href;
+
+        if (sDestUserId == null) {
+            alert("Forward To cannot be empty.  Contact System Admin.");
+            return;
+        }
+        var PostBackURL = '/Workflows/CreateTask';
+        $.ajax({
+            type: "GET",
+            url: PostBackURL,
+            contentType: "application/json; charset=utf-8",
+            data: { "ProcessId": sProcessId, "OperatorId": sOperatorId, "ActionId": sUserAction, "Remarks": sUserRemarks, "ActionUrl": sCurrentUrl, "UserId": sDestUserId },
+            datatype: "json",
+            success: function (data) {
+                $('#taskManagerBody').html(data);
+                DisplayTaskManagerBody();
+            },
+            error: function (err) {
+                $('#modalTaskManager').modal('hide');
+                alert(err);
+            }
+        });
+
+        //get task trail
+        PostBackURL = '/Workflows/GetTaskTrailByUrl';
+        //var sCurrentUrl = window.location.href;
+        $.ajax({
+            type: "GET",
+            url: PostBackURL,
+            contentType: "application/json; charset=utf-8",
+            data: { "ActionUrl": sCurrentUrl },
+            datatype: "json",
+            success: function (data) {
+                $('#taskManagerTrail').html(data);
+                DisplayTaskManagerTrail();
+            },
+            error: function () {
+                $('#taskManagerTrail').html("");
+            }
+        });
+
+    });
+    function createTask() {
+
+        //DisplayTaskManagerBody();;
+    }
+</script>
+

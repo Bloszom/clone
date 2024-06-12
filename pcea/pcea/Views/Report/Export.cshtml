@@ -1,0 +1,430 @@
+﻿
+@model IEnumerable<Reports>
+
+@{
+    ViewData["Title"] = "Export Survey";
+}
+
+@if (TempData["message"] != null || ViewBag.message != null)
+{
+    string msg = ViewBag.message != null ? ViewBag.message : TempData["message"];
+    <div class="p-2 w-75 m-auto small text-center mb-2 bg-success text-white">@msg</div>
+}
+@if (TempData["error"] != null || ViewBag.error != null)
+{
+    string err = ViewBag.error != null ? ViewBag.error : TempData["error"];
+    <div class="p-2 w-75 m-auto small text-center mb-2 bg-danger text-white">@err</div>
+}
+
+@section Css{
+    <style>
+        /*#rptCategory {
+            display: none;
+        }*/
+
+        #filter:hover {
+            color: white;
+            cursor: pointer;
+            background-color: midnightblue
+        }
+
+        .ms-container ul li {
+            white-space: nowrap;
+            overflow: hidden;
+            border-bottom: 1px solid #D0D0D0;
+        }
+    </style>
+}
+
+<div class="bg-white p-2">
+    <div class="row">
+        <div class="text-center justify-content-center position-static row w-100 pl-5 pl-5">
+            <div class="col-sm-8 pl-5 pr-5">
+                <div class="form-group">
+                    <small class="text-uppercase">Surveys</small>
+                    <div class="input-group">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <i class="fa fa-file"></i>
+                            </div>
+                        </div>
+                        @Html.DropDownList("Surveys", (SelectList)ViewBag.surveyList, "Select a survey", new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="form-group text-left">
+                    <small class="text-uppercase">Filter survey fields</small>
+                    <div class="input-group">
+                        <input class="form-control" id="search" placeholder="Filter Fields" />
+                        <div class="input-group-append input-group-btn">
+                            <div class="input-group-text" id="filter">
+                                <i class="fa fa-filter"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <select id="selFields" multiple="multiple">
+                    </select>
+                    <input type="hidden" name="clmFields" id="clmFields" value="" />
+                </div>
+
+                @*<div class="row small">
+                        <div class="col-sm-6 pr-0">
+                            Date (From):
+                            @Html.TextBox("DateFrom", null, new { @class = "form-control", @type = "date" })
+                        </div>
+                        <div class="col-sm-6 pl-0">
+                            Date (To):
+                            @Html.TextBox("DateTo", null, new { @class = "form-control", @type = "date" })
+                        </div>
+                    </div>*@
+                <div class="form-group text-right mt-3">
+                    <button id="btnLoad" type="button" class="btn btn-secondary btn-sm">Load<i class="fa fa-angle-double-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 overflow-auto ">
+            <br />
+            <table id="tblExport" class="table table-striped border-top table-hover">
+                <thead>
+                    <tr id="trHead">
+                        <td>Heading</td>
+                    </tr>
+                </thead>
+                <tbody id="tbBody">
+                    @if (Model != null && Model.Count() > 0)
+                    {
+                        //var i = 0;
+                    }
+                    else
+                    {
+                        <tr>
+                            <td>
+                                <h4 class="font-weight-light text-center small">Construct and upload from the left side of this page</h4>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="row">
+                <div class="form-group col-6 text-left mt-2">
+                    <button type="button" class="btn btn-primary btn-sm btnSaveReport" title="Save the above report"><i class=" icon-paper-airplane"></i>Save Template</button>
+                </div>
+                <div class="form-group col-6 text-right mt-2">
+                    <button type="button" class="btn btn-primary btn-sm btnExport" title="Download the above report"><i class="fa fa-download"></i> Export</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Workflow/Tasks Management -->
+<div class="modal fade" id="modalReport">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Report Template Creation</h4>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div id="reportLoader" class="modal-body report-loader">
+                <div class="text-center"><img src="~/img/loading.gif" /></div>
+            </div>
+            <div id="modalReportBody" class="modal-body report-body">
+                <form id="templateFrm" method="post" asp-action="CreateTemplate" asp-controller="Report">
+                    <div class="border p-2">
+                        <div class="form-group row">
+                            @*<label class="col-sm-3 form-control-label">Form Name</label>*@
+                            <div class="col-sm-12 text-center">
+                                <h3 id="title"></h3>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="form-group col-9">
+                                    <small>Report Name</small>
+                                    <input type="text" id="rptName" name="ReportName" class="form-control" required />
+                                </div>
+                                <div class="form-group col-3">
+                                    <small>Table Type</small>
+                                    <select name="tableType" class="form-control">
+                                        <option value="1">Table Type 1</option>
+                                        <option value="2">Table Type 2</option>
+                                        <option value="3">Table Type 3</option>
+                                        <option value="4">Table Type 4</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <small>Selected Fields</small>
+                                <label class="border p-3 w-100" id="lblFormFields"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="rptCategory" class="table-responsive bg-white">
+                        <table class="table table-striped table-hover w-100">
+
+                            <colgroup>
+                                <col span="1" style="width: 3%;" />
+                                <col span="1" style="width: 17%;" />
+                                <col span="1" style="width: 80%;" />
+                            </colgroup>
+                            <thead>
+
+                                <tr>
+
+                                    <th @*width="5%"*@>#</th>
+                                    <th @*width="95%"*@>Table Type</th>
+                                    <th @*width="70%"*@>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <th @*style="width:30%"*@>TABLE TYPE 1</th>
+                                    <td @*style="width:20%; height:30%"*@>
+                                        @*This table type presents the generated data in a grid that places the operators who have made submission as regards the selected questionaire on the rows and then the selected field on the columns as the table headers. This type is suitable for presenting the data generated as it was entered by the operators.*@
+                                        <img style="max-width:85%" src="~/img/Table_Table_1.PNG" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <th>TABLE TYPE 2</th>
+                                    <td>
+                                        @*This table type presents the generated data in a grid that places the operators who have made submission as regards the selected questionaire on the rows and then the year that corresponds to the data entered per form on the columns as the table headers. Note that unlike Type 1, this type sums up the value per year and displays it accordingly. This type is suitable for presenting the data generated for each operator submission per year.*@
+                                        <img style="max-width:85%" src="~/img/Table_Type_2.PNG" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <th>TABLE TYPE 3 (Average)</th>
+                                    <td>
+                                        @*This table type presents the generated data in a grid that places the operators who have made submission as regards the selected questionaire on the rows and then the year that corresponds to the data entered per form on the columns as the table headers. Note that unlike Type 2, this type collates the average value after summing up the value per year and displays it accordingly. This type is suitable for presenting the data generated for each operator submission per year only that the final values are averaged per operator.*@
+                                        <img style="max-width:85%" src="~/img/Table_Type_3.PNG" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <th>TABLE TYPE 4</th>
+                                    <td>
+                                        @*This table type presents the generated data in a grid that places the operators who have made submission as regards the selected questionaire on the rows and then the year that corresponds to the data entered per form on the columns as the table headers. Note that unlike Type 2, this type collates the average value after summing up the value per year and displays it accordingly. This type is suitable for presenting the data generated for each operator submission per year only that the final values are averaged per operator.*@
+                                        <img style="max-width:85%" src="~/img/Table_Type_4.PNG" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                    @*<div class="form-group row">
+                            <label class="col-sm-2 text-center text-bold pr-0">Selected Fields</label>
+                            <div class="col-sm-10 pl-0">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 text-center text-bold pr-0">Report Title</label>
+                            <div class="col-sm-5 pl-0">
+                                <input class="form-control" name="ReportName" id="rptName" />
+                            </div>
+                            <div class="col-sm-5 pl-0">
+                                <input class="form-control" id="rptName" />
+                            </div>
+                        </div>*@
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div id="reportAction" class="modal-body text-center w-100">
+                    <button id="btnCreate" class="btn btn-primary" type="button">Create template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Workflow/Tasks Management /-->
+@section Scripts{
+    <script src="~/assets/vendor/multiselect/js/jquery.multi-select.js"></script>
+    <script src="~/js/jquery.table2excel.js"></script>
+    <script type="text/javascript">
+        $().ready(function () {
+
+            function DisplayReportLoader() {
+                try {
+                    $('.report-loader').removeAttr('style');
+                    $('.report-body').removeAttr('style');
+                    $('.report-trail').removeAttr('style');
+
+                    $('.report-loader').attr('style', 'display:normal');
+                    $('.report-body').attr('style', 'display:none');
+                    $('.report-trail').attr('style', 'display:none');
+                } catch (e) {
+                }
+            }
+
+            function DisplayReportBody() {
+                try {
+                    $('.report-loader').removeAttr('style');
+                    $('.report-body').removeAttr('style');
+
+                    $('.report-loader').attr('style', 'display:none');
+                    $('.report-body').attr('style', 'display:normal');
+                } catch (e) {
+                }
+            }
+            $('#selFields').multiSelect({
+                selectableHeader: '<small class="text-uppercase text-gray">Survey Fields</small>',
+                selectionHeader: '<small class="text-uppercase text-gray">Selected Fields</small>',
+                afterSelect: function (values) { buildColumns(values); },
+                afterDeselect: function (values) { buildColumns(values); }
+            });
+
+            function buildColumns(val) {
+                try {
+                    var fds = [];
+                    $('.ms-selection ul li').each(function (i, v) { if ($(v).is(':visible')) fds.push($(v).find('span').html()); });
+                    $('#clmFields').val($('#Surveys').val() + ':' + fds.join('|'));// JSON.stringify(Object.assign({}, fds)));
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+
+            $('#filter').on('click', function () {
+                var value = $('#search').val();
+                //var value = $(this).val().toLowerCase();
+                $("#selFields *").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+
+                $('#selFields').multiSelect('refresh');
+            })
+
+            $('#btnLoad').click(function () {
+                var fa = $(this).find('i');
+                fa.attr('class', 'fa fa-gear fa-spin');
+                $.ajax({
+                    url: "/Report/Export",
+                    type: "POST",
+                    data: { "report": $('#clmFields').val(), "from": $('#DateFrom').val(), "to": $('#DateTo').val() },
+                    dataType: 'json',
+                    success: function (response) {
+                        //console.log(response);
+                        $('#trHead').html(response.header);
+                        $('#tbBody').html(response.body);
+                        fa.attr('class', 'fa fa-angle-double-right');
+                    },
+                    error: function (err) {
+                        console.log("error:" + err);
+                        fa.attr('class', 'fa fa-angle-double-right');
+
+                        if (err.getResponseHeader('content-type').indexOf('text/html') !== -1) {
+                            // Display the HTML error page
+                            $('body').html(err.responseText);
+                        }
+                    }
+                });
+            });
+
+            $('#Surveys').change(function () {
+                var fa = $(this).parent().find('i');
+                fa.attr('class', 'fa fa-gear fa-spin text-danger');
+                try {
+                    $('#selFields').empty();
+                    $.ajax({
+                        url: "/Report/ListFormFields",
+                        type: "POST",
+                        data: { "entry": $(this).val() },
+                        dataType: 'json',
+                        success: function (response) {
+                            $.each(response.fields, function (i, v) {
+                                var vl = v.replace(/(<([^>]+)>)/gi, "");
+                                vl = vl.replace('&nbsp;', ' ').replace('&amp;', '&');
+                                $('#selFields').append($('<option>', { value: vl + ' »' + i, text: vl + ' »' + i }).attr('title', vl + ' »' + i));
+                            });
+                            $("#selFields").html($("#selFields option").sort(function (a, b) {
+                                return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+                            }))
+                            $('#selFields').multiSelect('refresh');
+                            fa.attr('class', 'fa fa-file');
+                        },
+                        error: function (err) {
+                            console.log("error:" + err);
+                            fa.attr('class', 'fa fa-file');
+
+                            if (err.getResponseHeader('content-type').indexOf('text/html') !== -1) {
+                                // Display the HTML error page
+                                $('body').html(err.responseText);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    //console.log("FATAL ERROR - " + e);
+                    fa.attr('class', 'fa fa-file');
+                }
+            });
+
+            //$('.csvDownload').click(function () {
+            //    var rows = document.querySelectorAll('#tblExport tr');
+            //    // Construct csv
+            //    var csv = [];
+            //    for (var i = 0; i < rows.length; i++) {
+            //        var row = [], cols = rows[i].querySelectorAll('td, th');
+            //        for (var j = 0; j < cols.length; j++) {
+            //            var data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ')
+            //            data = data.replace(/"/g, '""'); row.push('"' + data + '"');
+            //        }
+            //        csv.push(row.join(';'));
+            //    }
+            //    var csv_string = csv.join('\n');
+            //    // Download
+            //    var filename = 'Export_' + new Date().toLocaleDateString() + '.csv';
+            //    var link = document.createElement('a'); link.style.display = 'none'; link.setAttribute('target', '_blank');
+            //    link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv_string));
+            //    link.setAttribute('download', filename); document.body.appendChild(link);
+            //    link.click(); document.body.removeChild(link);
+            //    //window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csv_string), '_blank');
+            //});
+
+            $(document).on('click', '.btnSaveReport', function () {
+                var selections = $('#clmFields').val();
+                var title = $('#Surveys :selected').text();
+                var selFields = selections.substring(selections.indexOf(':') + 1).split("|");
+                var fieldList = "";
+                console.log(title);
+                $('#modalReport').modal('show');
+
+                for (var itm of selFields) {
+                    fieldList += itm.substring(0, itm.indexOf("»")).trim() + ",";
+                }
+                console.log(fieldList = fieldList.substring(0, fieldList.lastIndexOf(",")));
+                $('#lblFormFields').text(fieldList);
+                $('#title').text(title);
+
+                DisplayReportBody();
+
+                //form.append('<input type="hidden" name="FormId" id="frmId" value="' + formid + '"/>')
+                //form.submit();
+            });
+
+            $(document).on('click', '#btnCreate', function () {
+                var formid = $('#Surveys').val();
+                var title = $('#rptName').val();
+                var frmFields = $('#lblFormFields').text();
+                var form = $('#templateFrm');
+
+                $('<input type="hidden" value="' + frmFields + '" name="RptFrmFields" />').appendTo(form);
+                $('<input type="hidden" value="' + title + '" name="RptTitle" />').appendTo(form);
+                $('<input type="hidden" value="' + formid + '" name="FormId" />').appendTo(form);
+
+                form.submit();
+            });
+
+
+            $(document).on('click', '.btnExport', function () {
+                $("#tblExport").table2excel({
+                    name: "Survey Report",
+                    filename: "SurveyReport",//do not include extension
+                    fileext: ".xls" // file extension
+                });
+            });
+        });
+    </script>
+}
